@@ -38,11 +38,12 @@ mergeDVS <- Data_Vax_SYMP[!duplicated(VAERS_ID),]
 mergeDVS2021 <- mergeDVS
 
 mergeDVS <-rbind(mergeDVS2020,mergeDVS2021)
+# check for duplicate VAERS_ID
+mergeDVS[duplicated(VAERS_ID),.N]
 
 print("..."
 print("Merge is Done. Ctrl+C to cancel rest of script. Sleeping 10 seconds");Sys.sleep(10)
 print("Continuing ...")
-
 
 # tm (corpus) and wordcloud routines
 library(tm) # Install from CRAN if neccessary
