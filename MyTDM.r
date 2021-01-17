@@ -39,7 +39,6 @@ mergeDVS2021 <- mergeDVS
 
 mergeDVS <-rbind(mergeDVS2020,mergeDVS2021)
 
-
 print("..."
 print("Merge is Done. Ctrl+C to cancel rest of script. Sleeping 10 seconds");Sys.sleep(10)
 print("Continuing ...")
@@ -105,30 +104,3 @@ par(mfrow=c(1,1))
 mtext("12/2020 and 01/2021 VAERS Symptom data for Covid19",col="blue",cex=1.75,side=1,line=-1)
 mtext("from https://vaers.hhs.gov/data/datasets.html",col="blue",cex=1.75,side=1,line=1)
 #not run
-
-
-
-
-
-
- 
-dev.new();wordcloud(words=names(freq), freq=freq, min.freq=32, random.order=F)
-mtext("Covid19 VAERS Symptoms Word Cloud with min word freq =32",col="red",cex=1.5)
-dev.new();wordcloud(words=names(freq), freq=freq, min.freq=64, random.order=F)
-mtext("Covid19 VAERS Symptoms Word Cloud with min word freq =65",col="red",cex=1.5)
-dev.new();wordcloud(words=names(freq), freq=freq, min.freq=128, random.order=F)
-mtext("Covid19 VAERS Symptoms Word Cloud with min word freq =128",col="red",cex=1.5)
-#not run
-
-
-
-dev.new()
-plot(myTdm, term=freq.terms, corThreshold=0.1, weighting=T)
-dev.new()
-plot(myTdm, term=freq.terms, corThreshold=0.01, weighting=T) # long
-dev.new()
-plot(myTdm, term=freq.terms, corThreshold=0.001, weighting=T) # very long 
-
-
-
-
