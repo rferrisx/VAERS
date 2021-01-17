@@ -5,7 +5,7 @@
 library(data.table)
 # Needs unzipped VAERS library from:
 # https://vaers.hhs.gov/data/datasets.html
-# Bellow is December 2020 data and (paritial)January 2021 data
+# Below is December 2020 data and (paritial)January 2021 data
 
 # File folder should contain like this:
 # 2020VAERSDATA.csv
