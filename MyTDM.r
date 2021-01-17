@@ -1,6 +1,6 @@
 # 7:16 PM 1/15/2021
 # This code dumps five columns (1 - 5) of Covid19 VAERS Symptom entries into a corpus for Word Cloud graphics
-
+# R CRAN v 4.03
 # install data.table
 library(data.table)
 # Needs unzipped VAERS library from:
