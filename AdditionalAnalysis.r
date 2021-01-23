@@ -65,10 +65,8 @@ thromb <- rbind(thromb,mergeDVS[grepl("thromb",ignore.case=TRUE,SYMPTOM4),])
 thromb <- rbind(thromb,mergeDVS[grepl("thromb",ignore.case=TRUE,SYMPTOM5),])
 thromb <- thromb[!duplicated(VAERS_ID),]
 
-
 thromb[VAX_TYPE == "COVID19",
 .(VAX_TYPE,VAX_MANU,VAERS_ID,AGE_YRS,DIED,VAX_DATE,ONSET_DATE,NUMDAYS,SYMPTOM1,SYMPTOM2,SYMPTOM3,SYMPTOM4,SYMPTOM5)][order(-VAX_DATE,VAERS_ID)]
-
 
 print("list of errors in the data")
 cat('
@@ -85,8 +83,5 @@ mergeDVS[VAX_TYPE == "COVID19",.N,.(VAX_DATE,ONSET_DATE,NUMDAYS)][order(-NUMDAYS
   8: 01/04/2020 01/04/2021     366 1
   9: 01/04/2020 12/30/2020     361 1
  10: 02/18/2020 12/18/2020     304 1
-
 ')
-
-
 
