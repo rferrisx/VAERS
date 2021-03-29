@@ -1,6 +1,6 @@
-# Grokking VAER data
+# Grokking VAERS data
 library(data.table)
-library(lattice) # for charts
+library(lattice)
 # Needs unzipped VAERS library from:
 # https://vaers.hhs.gov/data/datasets.html
 # Bellow is December 2020 data and (paritial)January 2021 data
@@ -11,7 +11,7 @@ library(lattice) # for charts
 # 2020VAERSVAX.csv
 
 # merge routines:
-# December 2020 data
+# All 2020 data
 setwd("D:\\Politics\\VAERS\\2020VAERSData12.28.2020")
 Data_Vax <- merge(fread("2020VAERSDATA.csv"),fread("2020VAERSVAX.csv"),all.x=TRUE,by="VAERS_ID")
 setkey(Data_Vax,VAERS_ID)
@@ -25,8 +25,8 @@ Data_Vax_SYMP_2020 <- Data_Vax_SYMP
 mergeDVS <- Data_Vax_SYMP[!duplicated(VAERS_ID),]
 mergeDVS2020 <- mergeDVS
 
-# up to March 12 2021 data
-setwd("D:\\Politics\\VAERS\\2021VAERSData.03.12.2021")
+# through March 19 2021 data
+setwd("D:\\Politics\\VAERS\\2021VAERSData.03.19.2021")
 Data_Vax <- merge(fread("2021VAERSDATA.csv"),fread("2021VAERSVAX.csv"),all.x=TRUE,by="VAERS_ID")
 setkey(Data_Vax,VAERS_ID)
 Data_Vax_SYMP <- merge(Data_Vax,fread("2021VAERSSYMPTOMS.csv"),all.x=TRUE,by="VAERS_ID")
@@ -51,8 +51,8 @@ dev.new()
 mergeDVS[VAX_TYPE == "COVID19" & !is.na(CAGE_YR) & CAGE_YR > 17,.N,.(CAGE_YR)][order(CAGE_YR)][,barplot(N,names.arg=CAGE_YR,col=rainbow(nrow(.SD)))]
 dev.new()
 mergeDVS[VAX_TYPE == "COVID19" & DIED == "Y" & !is.na(CAGE_YR) & CAGE_YR > 17,.N,.(CAGE_YR)][order(CAGE_YR)][,barplot(N,names.arg=CAGE_YR,col=rainbow(nrow(.SD)))]
-
 #mergeDVS[VAX_TYPE == "COVID19"& L_THREAT == "Y",.(SYMPTOM1,SYMPTOM2,SYMPTOM3,SYMPTOM4,SYMPTOM5)]
+
 # COVID.LifeThreatening Corpus
 rm(Life.Threatening)
 Life.Threatening <- mergeDVS[VAX_TYPE == "COVID19"& L_THREAT == "Y",.(SYMPTOMS=SYMPTOM1)]
@@ -141,6 +141,23 @@ throat <- rbind(throat,mergeDVS[grepl("throat",ignore.case=TRUE,SYMPTOM4),])
 throat <- rbind(throat,mergeDVS[grepl("throat",ignore.case=TRUE,SYMPTOM5),])
 throat <- throat[!duplicated(VAERS_ID),]
 
+# head
+rm(head)
+head <- mergeDVS[grepl("Guillain-Barre",ignore.case=TRUE,SYMPTOM1),]
+head <- rbind(head,mergeDVS[grepl("Guillain-Barre",ignore.case=TRUE,SYMPTOM2),])
+head <- rbind(head,mergeDVS[grepl("Guillain-Barre",ignore.case=TRUE,SYMPTOM3),])
+head <- rbind(head,mergeDVS[grepl("Guillain-Barre",ignore.case=TRUE,SYMPTOM4),])
+head <- rbind(head,mergeDVS[grepl("Guillain-Barre",ignore.case=TRUE,SYMPTOM5),])
+head <- head[!duplicated(VAERS_ID)]
+
+#chill
+rm(chill)
+chill <-  mergeDVS[grepl("chill",ignore.case=TRUE,SYMPTOM1),]
+chill <- rbind(chill,mergeDVS[grepl("chill",ignore.case=TRUE,SYMPTOM2),])
+chill <- rbind(chill,mergeDVS[grepl("chill",ignore.case=TRUE,SYMPTOM3),])
+chill <- rbind(chill,mergeDVS[grepl("chill",ignore.case=TRUE,SYMPTOM4),])
+chill <- rbind(chill,mergeDVS[grepl("chill",ignore.case=TRUE,SYMPTOM5),])
+chill <- chill[!duplicated(VAERS_ID),]
 
 # Guillain-Barre
 rm(Guillain.Barre)
@@ -149,7 +166,7 @@ Guillain.Barre <- rbind(Guillain.Barre,mergeDVS[grepl("Guillain-Barre",ignore.ca
 Guillain.Barre <- rbind(Guillain.Barre,mergeDVS[grepl("Guillain-Barre",ignore.case=TRUE,SYMPTOM3),])
 Guillain.Barre <- rbind(Guillain.Barre,mergeDVS[grepl("Guillain-Barre",ignore.case=TRUE,SYMPTOM4),])
 Guillain.Barre <- rbind(Guillain.Barre,mergeDVS[grepl("Guillain-Barre",ignore.case=TRUE,SYMPTOM5),])
-Guillain.Barre <- Guillain.Barre[!duplicated(VAERS_ID)
+Guillain.Barre <- Guillain.Barre[!duplicated(VAERS_ID)]
 
 rm(infection)
 infection <-  mergeDVS[grepl("infection",ignore.case=TRUE,SYMPTOM1),]
@@ -159,19 +176,96 @@ infection <- rbind(infection,mergeDVS[grepl("infection",ignore.case=TRUE,SYMPTOM
 infection <- rbind(infection,mergeDVS[grepl("infection",ignore.case=TRUE,SYMPTOM5),])
 infection <- infection[!duplicated(VAERS_ID),]
 
+# neuro
+rm(neuro)
+neuro <- mergeDVS[grepl("Guillain-Barre",ignore.case=TRUE,SYMPTOM1),]
+neuro <- rbind(neuro,mergeDVS[grepl("Guillain-Barre",ignore.case=TRUE,SYMPTOM2),])
+neuro <- rbind(neuro,mergeDVS[grepl("Guillain-Barre",ignore.case=TRUE,SYMPTOM3),])
+neuro <- rbind(neuro,mergeDVS[grepl("Guillain-Barre",ignore.case=TRUE,SYMPTOM4),])
+neuro <- rbind(neuro,mergeDVS[grepl("Guillain-Barre",ignore.case=TRUE,SYMPTOM5),])
+neuro <- neuro[!duplicated(VAERS_ID)
+
+#ceph
+rm(ceph)
+ceph <-  mergeDVS[grepl("ceph",ignore.case=TRUE,SYMPTOM1),]
+ceph <- rbind(ceph,mergeDVS[grepl("ceph",ignore.case=TRUE,SYMPTOM2),])
+ceph <- rbind(ceph,mergeDVS[grepl("ceph",ignore.case=TRUE,SYMPTOM3),])
+ceph <- rbind(ceph,mergeDVS[grepl("ceph",ignore.case=TRUE,SYMPTOM4),])
+ceph <- rbind(ceph,mergeDVS[grepl("ceph",ignore.case=TRUE,SYMPTOM5),])
+ceph <- ceph[!duplicated(VAERS_ID),]
+
 death.other <- setnames(merge(mergeDVS[DIED == "Y",.N,.(VAX_TYPE)],mergeDVS[DIED != "Y" ,.N,.(VAX_TYPE)],all=TRUE,by="VAX_TYPE"),c("VAX_TYPE","DIEDeqYES","Other.VAERS.LOG"))[order(-DIEDeqYES)]
+life.threat <- setnames(merge(mergeDVS[L_THREAT == "Y",.N,.(VAX_TYPE)],mergeDVS[DIED == "Y" & L_THREAT == "Y" ,.N,.(VAX_TYPE)],all=TRUE,by="VAX_TYPE"),c("VAX_TYPE","L_THREATeqYES","DIEDandL_THREATeqYES"))[order(-L_THREATeqYES)]
 blood.card <- setnames(merge(blood[,.N,.(VAX_TYPE)],card[,.N,.(VAX_TYPE)],all=TRUE,by="VAX_TYPE"),c("VAX_TYPE","blood","card"))[order(-(blood+card))]
 lymph.throat <- setnames(merge(lymph[,.N,.(VAX_TYPE)],throat[,.N,.(VAX_TYPE)],all=TRUE,by="VAX_TYPE"),
 c("VAX_TYPE","lymph","throat"))[order(-(lymph + throat))]
 anaph.thromb <- setnames(merge(anaph[,.N,.(VAX_TYPE)],thromb[,.N,.(VAX_TYPE)],all=TRUE,by="VAX_TYPE"),
 c("VAX_TYPE","anaph","thromb"))[order(-(anaph + thromb))]
+head.chill <- setnames(merge(head[,.N,.(VAX_TYPE)],chill[,.N,.(VAX_TYPE)],all=TRUE,by="VAX_TYPE"),
+c("VAX_TYPE","head","chill"))[order(-(head + chill))]
+ceph.neuro <- setnames(merge(ceph[,.N,.(VAX_TYPE)],neuro[,.N,.(VAX_TYPE)],all=TRUE,by="VAX_TYPE"),
+c("VAX_TYPE","ceph","neuro"))[order(-(neuro + ceph))]
+
+# not working yet
+# cere.chest <- setnames(merge(cere[,.N,.(VAX_TYPE)],chest[,.N,.(VAX_TYPE)],all=TRUE,by="VAX_TYPE"),
+# c("VAX_TYPE","cere","chest"))[order(-(cere + chest))]
+
 GBS.infection <- setnames(merge(infection[,.N,.(VAX_TYPE)],Guillain.Barre[,.N,.(VAX_TYPE)],all=TRUE,by="VAX_TYPE"),
 c("VAX_TYPE","Guillain.Barre","infection"))[order(-(Guillain.Barre + infection))]
+
 fung.glucan <- setnames(merge(fung[,.N,.(VAX_TYPE)],glucan[,.N,.(VAX_TYPE)],all=TRUE,by="VAX_TYPE"),
 c("VAX_TYPE","fung","glucan"))[order(-(fung + glucan))]
 
-m1 <- merge(death.other,blood.card,all=TRUE,by="VAX_TYPE")
-m2 <- merge(lymph.throat,anaph.thromb,all=TRUE,by="VAX_TYPE")
-m3 <- merge(GBS.infection,fung.glucan,all=TRUE,by="VAX_TYPE")
-m4 <- merge(m1,merge(m2,m3,all=TRUE,by="VAX_TYPE"),all=TRUE,by="VAX_TYPE")[order(-DIEDeqYES)]
-m4 <- m4[is.na(m4)] <-0
+m1 <- merge(death.other,life.threat,all=TRUE,by="VAX_TYPE")
+m2 <- merge(blood.card,lymph.throat,all=TRUE,by="VAX_TYPE")
+m3 <- merge(anaph.thromb,ceph.neuro,all=TRUE,by="VAX_TYPE")
+m4 <- merge(GBS.infection,fung.glucan,all=TRUE,by="VAX_TYPE")
+
+m5 <- merge(m1,m2,all=TRUE,by="VAX_TYPE")
+m6 <- merge(m3,m4,all=TRUE,by="VAX_TYPE")
+m7 <- merge(m5,m6,all=TRUE,by="VAX_TYPE")
+
+m8 <- m7[order(-Other.VAERS.LOG)];m8[is.na(m8)] <-0
+m8
+
+# scratch
+print("Errors in the data")
+cat('
+Errors in the Data (Data discrepancies)
+Obvious wrong VAX_DATE?? 
+mergeDVS[VAX_TYPE == "COVID19",.N,.(VAX_DATE,ONSET_DATE,NUMDAYS)][order(-NUMDAYS)][1:100]
+       VAX_DATE ONSET_DATE NUMDAYS N
+  1: 01/18/1920 01/23/2021   36896 1
+  2: 01/25/1921 02/22/2021   36553 1
+  3: 01/06/1921 01/10/2021   36529 1
+  4: 01/07/1921 01/07/2021   36525 1
+  5: 01/01/1921 01/01/2021   36525 1
+  6: 10/17/1946 02/22/2021   27157 1
+  7: 06/29/1950 01/07/2021   25760 1
+  8: 06/01/1952 01/09/2021   25059 1
+  9: 02/12/1953 03/02/2021   24855 1
+ 10: 01/05/1959 01/06/2021   22647 1
+ ...
+')
+ 
+cat('
+Obvious wrong AGE_YRS?
+> mergeDVS[VAX_TYPE == "COVID19" & AGE_YRS != CAGE_YR & AGE_YRS < 15,.N,.(AGE_YRS,CAGE_YR)][order(-N)]
+    AGE_YRS CAGE_YR  N
+ 1:    1.08       0 18
+ 2:    0.33      59  1
+ 3:    0.50      43  1
+ 4:    0.58      38  1
+ 5:    0.25      44  1
+ 6:    0.42       0  1
+ 7:    1.58       0  1
+ 8:    1.25       0  1
+ 9:    1.75       0  1
+10:    8.00       7  1
+11:    1.50       0  1
+12:    0.08       0  1
+13:    1.33       1  1
+')
+
+
+
