@@ -3,7 +3,7 @@ library(data.table)
 library(lattice)
 # Needs unzipped VAERS library from:
 # https://vaers.hhs.gov/data/datasets.html
-# Bellow is December 2020 data and (paritial)January 2021 data
+# Below is 2020 data and (paritial) 2021 data
 
 # File folder should contain like this:
 # 2020VAERSDATA.csv
@@ -26,7 +26,7 @@ mergeDVS <- Data_Vax_SYMP[!duplicated(VAERS_ID),]
 mergeDVS2020 <- mergeDVS
 
 # through March 19 2021 data
-setwd("D:\\Politics\\VAERS\\2021VAERSData.03.19.2021")
+setwd("D:\\Politics\\VAERS\\2021VAERSData.03.26.2021")
 Data_Vax <- merge(fread("2021VAERSDATA.csv"),fread("2021VAERSVAX.csv"),all.x=TRUE,by="VAERS_ID")
 setkey(Data_Vax,VAERS_ID)
 Data_Vax_SYMP <- merge(Data_Vax,fread("2021VAERSSYMPTOMS.csv"),all.x=TRUE,by="VAERS_ID")
