@@ -1,18 +1,18 @@
-# Grokking VAERS data
+
 library(data.table)
 library(lattice)
 # Needs unzipped VAERS library from:
 # https://vaers.hhs.gov/data/datasets.html
-# Below is 2020 data and (paritial) 2021 data
+# Below is full 2020 data and (paritial) April 2021 data
 
 # File folder should contain like this:
 # 2020VAERSDATA.csv
 # 2020VAERSSYMPTOMS.csv
-# 2020VAERSVAX.csv
+# 2020VAERSVAX.csv 
 
 # merge routines:
 # All 2020 data
-setwd("D:\\Politics\\VAERS\\2020VAERSData12.28.2020")
+setwd("D:\\Politics\\VAERS\\2020VAERSData.All.2020")
 Data_Vax <- merge(fread("2020VAERSDATA.csv"),fread("2020VAERSVAX.csv"),all.x=TRUE,by="VAERS_ID")
 setkey(Data_Vax,VAERS_ID)
 Data_Vax_SYMP <- merge(Data_Vax,fread("2020VAERSSYMPTOMS.csv"),all.x=TRUE,by="VAERS_ID")
@@ -25,8 +25,8 @@ Data_Vax_SYMP_2020 <- Data_Vax_SYMP
 mergeDVS <- Data_Vax_SYMP[!duplicated(VAERS_ID),]
 mergeDVS2020 <- mergeDVS
 
-# through March 19 2021 data
-setwd("D:\\Politics\\VAERS\\2021VAERSData.03.26.2021")
+# through April 02 2021 data
+setwd("D:\\Politics\\VAERS\\2021VAERSData.04.02.2021")
 Data_Vax <- merge(fread("2021VAERSDATA.csv"),fread("2021VAERSVAX.csv"),all.x=TRUE,by="VAERS_ID")
 setkey(Data_Vax,VAERS_ID)
 Data_Vax_SYMP <- merge(Data_Vax,fread("2021VAERSSYMPTOMS.csv"),all.x=TRUE,by="VAERS_ID")
@@ -83,7 +83,9 @@ thromb <- thromb[!duplicated(VAERS_ID),]
 
 thromb.COVID19 <- thromb[VAX_TYPE == "COVID19",
 .(VAX_TYPE,VAX_MANU,VAERS_ID,AGE_YRS,DIED,VAX_DATE,ONSET_DATE,NUMDAYS,SYMPTOM1,SYMPTOM2,SYMPTOM3,SYMPTOM4,SYMPTOM5)][order(-VAX_DATE,VAERS_ID)]
+
 rbind(anaph,thromb)[,.N,.(VAX_TYPE,SYMPTOM1,SYMPTOM2,SYMPTOM3,SYMPTOM4,SYMPTOM5)]
+
 anaph.thromb <- setnames(merge(anaph[,.N,.(VAX_TYPE)],thromb[,.N,.(VAX_TYPE)],by="VAX_TYPE"),
 c("VAX_TYPE","anaph","thromb"))[order(-(anaph + thromb))]
 
@@ -106,6 +108,7 @@ lymph <- lymph[!duplicated(VAERS_ID),]
 rbind(card,lymph)[,.N,.(VAX_TYPE,SYMPTOM1,SYMPTOM2,SYMPTOM3,SYMPTOM4,SYMPTOM5)]
 card.lymph <- setnames(merge(card[,.N,.(VAX_TYPE)],lymph[,.N,.(VAX_TYPE)],by="VAX_TYPE"),c("VAX_TYPE","card","lymph"))[order(-(card+lymph))]
 death.other <- setnames(merge(mergeDVS[DIED == "Y",.N,.(VAX_TYPE)],mergeDVS[DIED != "Y" ,.N,.(VAX_TYPE)],by="VAX_TYPE"),c("VAX_TYPE","DIED","Other.VAERS.LOG"))[order(-DIED)]
+
 # merge(merge(death.other,card.lymph,all=TRUE,by="VAX_TYPE"),anaph.thromb,all=TRUE,by="VAX_TYPE") [order(-(card+lymph+anaph+thromb))]
 
 # Blood beta-D-glucan positive
@@ -205,16 +208,14 @@ head.chill <- setnames(merge(head[,.N,.(VAX_TYPE)],chill[,.N,.(VAX_TYPE)],all=TR
 c("VAX_TYPE","head","chill"))[order(-(head + chill))]
 ceph.neuro <- setnames(merge(ceph[,.N,.(VAX_TYPE)],neuro[,.N,.(VAX_TYPE)],all=TRUE,by="VAX_TYPE"),
 c("VAX_TYPE","ceph","neuro"))[order(-(neuro + ceph))]
-
 # not working yet
 # cere.chest <- setnames(merge(cere[,.N,.(VAX_TYPE)],chest[,.N,.(VAX_TYPE)],all=TRUE,by="VAX_TYPE"),
 # c("VAX_TYPE","cere","chest"))[order(-(cere + chest))]
-
 GBS.infection <- setnames(merge(infection[,.N,.(VAX_TYPE)],Guillain.Barre[,.N,.(VAX_TYPE)],all=TRUE,by="VAX_TYPE"),
 c("VAX_TYPE","Guillain.Barre","infection"))[order(-(Guillain.Barre + infection))]
-
 fung.glucan <- setnames(merge(fung[,.N,.(VAX_TYPE)],glucan[,.N,.(VAX_TYPE)],all=TRUE,by="VAX_TYPE"),
 c("VAX_TYPE","fung","glucan"))[order(-(fung + glucan))]
+
 
 m1 <- merge(death.other,life.threat,all=TRUE,by="VAX_TYPE")
 m2 <- merge(blood.card,lymph.throat,all=TRUE,by="VAX_TYPE")
@@ -228,29 +229,49 @@ m7 <- merge(m5,m6,all=TRUE,by="VAX_TYPE")
 m8 <- m7[order(-Other.VAERS.LOG)];m8[is.na(m8)] <-0
 m8
 
+
 # scratch
-print("Errors in the data")
+
+cat(' 
+merge(m1,merge(m2,m3,all=TRUE,by="VAX_TYPE"),all=TRUE,by="VAX_TYPE")[order(-DIEDeqYES)]
+
+m1 <- merge(
+merge(death.other,card.lymph,all=TRUE,by="VAX_TYPE"),
+merge(anaph.thromb,GBS.infection,all=TRUE,by="VAX_TYPE"))
+m2 <- merge(fung.glucan,blood.card,all=TRUE,by="VAX_TYPE")
+
+merge(m1,m2,all=TRUE,by="VAX_TYPE")
+
+t1 <- merge(m1,merge(m2,m3,all=TRUE,by="VAX_TYPE"),all=TRUE,by="VAX_TYPE")[order(-DIEDeqYES)];t1[is.na(t1)] <-0
+
+rbind(infection,throat,blood,glucan,card,lymph,anaph,thromb)[VAX_TYPE == "COVID19",
+.(DIED,L_THREAT,ER_VISIT,HOSPITAL,SYMPTOM1,SYMPTOM2,SYMPTOM3,SYMPTOM4,SYMPTOM5)]
+
+
+setnames(mergeDVS[,.N,.(VAX_TYPE,SYMPTOMVERSION1)][,dcast(.SD,VAX_TYPE ~ SYMPTOMVERSION1,value.var="N",fun.aggregate=fsum)],
+c("VAX_TYPE","s22.1","s23","s23.1"))[order(-(s22.1 + s23 + s23.1))]
+
+
+print("list of errors in the data")
 cat('
 Errors in the Data (Data discrepancies)
-Obvious wrong VAX_DATE?? 
 mergeDVS[VAX_TYPE == "COVID19",.N,.(VAX_DATE,ONSET_DATE,NUMDAYS)][order(-NUMDAYS)][1:100]
        VAX_DATE ONSET_DATE NUMDAYS N
-  1: 01/18/1920 01/23/2021   36896 1
-  2: 01/25/1921 02/22/2021   36553 1
-  3: 01/06/1921 01/10/2021   36529 1
-  4: 01/07/1921 01/07/2021   36525 1
-  5: 01/01/1921 01/01/2021   36525 1
-  6: 10/17/1946 02/22/2021   27157 1
-  7: 06/29/1950 01/07/2021   25760 1
-  8: 06/01/1952 01/09/2021   25059 1
-  9: 02/12/1953 03/02/2021   24855 1
- 10: 01/05/1959 01/06/2021   22647 1
- ...
+  1: 09/16/1966 12/23/2020   19822 1
+  2: 06/06/1969 12/22/2020   18827 1
+  3: 12/18/1969 12/18/2020   18628 1
+  4: 07/23/1970 12/18/2020   18411 1
+  5: 04/22/2019 12/23/2020     611 1
+  6: 01/02/2020 01/04/2021     368 1
+  7: 01/04/2020 01/05/2021     367 1
+  8: 01/04/2020 01/04/2021     366 1
+  9: 01/04/2020 12/30/2020     361 1
+ 10: 02/18/2020 12/18/2020     304 1
+
 ')
- 
+
 cat('
-Obvious wrong AGE_YRS?
-> mergeDVS[VAX_TYPE == "COVID19" & AGE_YRS != CAGE_YR & AGE_YRS < 15,.N,.(AGE_YRS,CAGE_YR)][order(-N)]
+mergeDVS[VAX_TYPE == "COVID19" & AGE_YRS != CAGE_YR & AGE_YRS < 15,.N,.(AGE_YRS,CAGE_YR)][order(-N)]
     AGE_YRS CAGE_YR  N
  1:    1.08       0 18
  2:    0.33      59  1
@@ -265,7 +286,7 @@ Obvious wrong AGE_YRS?
 11:    1.50       0  1
 12:    0.08       0  1
 13:    1.33       1  1
-')
+ ')
 
 
 
