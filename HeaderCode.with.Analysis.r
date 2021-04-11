@@ -233,25 +233,6 @@ m8
 # scratch
 
 cat(' 
-merge(m1,merge(m2,m3,all=TRUE,by="VAX_TYPE"),all=TRUE,by="VAX_TYPE")[order(-DIEDeqYES)]
-
-m1 <- merge(
-merge(death.other,card.lymph,all=TRUE,by="VAX_TYPE"),
-merge(anaph.thromb,GBS.infection,all=TRUE,by="VAX_TYPE"))
-m2 <- merge(fung.glucan,blood.card,all=TRUE,by="VAX_TYPE")
-
-merge(m1,m2,all=TRUE,by="VAX_TYPE")
-
-t1 <- merge(m1,merge(m2,m3,all=TRUE,by="VAX_TYPE"),all=TRUE,by="VAX_TYPE")[order(-DIEDeqYES)];t1[is.na(t1)] <-0
-
-rbind(infection,throat,blood,glucan,card,lymph,anaph,thromb)[VAX_TYPE == "COVID19",
-.(DIED,L_THREAT,ER_VISIT,HOSPITAL,SYMPTOM1,SYMPTOM2,SYMPTOM3,SYMPTOM4,SYMPTOM5)]
-
-
-setnames(mergeDVS[,.N,.(VAX_TYPE,SYMPTOMVERSION1)][,dcast(.SD,VAX_TYPE ~ SYMPTOMVERSION1,value.var="N",fun.aggregate=fsum)],
-c("VAX_TYPE","s22.1","s23","s23.1"))[order(-(s22.1 + s23 + s23.1))]
-
-
 print("list of errors in the data")
 cat('
 Errors in the Data (Data discrepancies)
