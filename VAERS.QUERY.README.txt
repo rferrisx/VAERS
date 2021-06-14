@@ -1,0 +1,87 @@
+10:46 AM 6/14/2021 Ryan M. Ferris
+
+# README.txt for the code to Search VAERS
+
+In a normal form database, there are no duplicate entries with for the same primary key (e.g. VAERS_ID).
+You would not normally see multiple entries for a field that represents the same patient. Unfortunately, this happens *a lot* in VAERS.
+Removing the duplicate VAERS_ID can remove some critical information:
+
+     VAERS_ID All_symptoms
+  1:  1183418 Acute respiratory distress syndrome Bilevel positive airway pressure COVID-19 Chest pain Chills
+  2:  1183418 Cough Dyspnoea Hypoxia Oxygen saturation decreased Pulmonary embolism
+  3:  1183418 Pyrexia Respiratory failure SARS-CoV-2 test positive
+
+VAERS is subject to voluntary contributions by the public but mandated (sort of) for health practitioners. In theory, the CDC inspects and follows through on the incidences but does not update original data. The 'SYMPTOM'[1-5], (Medical) 'HISTORY','SYMPTOM_TEXT' field are all text fields.Only 'text mining' or searching allows one to find 'HIV' in these text fields as opposed to creating a separate set of ICD.9 fields for all relevant adverse generated pathology.
+
+***Spreadsheets (CSV) data ****
+Spreadsheets with number of row entries and descriptions. All of these CSVs are (query generated) subsets of the original data except the
+first. You may need to format some of the text cells for word wrap to easily see all the text simultaneous with the more constrained data fields:
+
+(VAERS_ID,VAX_MANU,SEX,CAGE_YR,DIED,L_THREAT,HISTORY,SYMPTOM*,SYMPTOM_TEXT)
+
+****Notes on databases merges and field names*****
+Merged fields from DATA,VAX and SYMPTOMS unzipped VAERS 'drops' contain these files:
+
+2021VAERSDATA.csv
+2021VAERSSYMPTOMS.csv
+2021VAERSVAX.csv
+
+which I merge to one file that has the fields below. Please see header code part the R code: 
+
+Sample data are included with fields:
+
+t(mergeDVS[1])
+                [,1]                                                                                                              
+VAERS_ID        "855017"                                                                                                          
+RECVDATE        "01/01/2020"                                                                                                      
+STATE           "HI"                                                                                                              
+AGE_YRS         "55"                                                                                                              
+CAGE_YR         "55"                                                                                                              
+CAGE_MO         NA                                                                                                                
+SEX             "F"                                                                                                               
+RPT_DATE        ""                                                                                                                
+SYMPTOM_TEXT    "Symptoms occurred almost immediately- aching joints, fever, chills, soreness at injection site - last for 3 days"
+DIED            ""                                                                                                                
+DATEDIED        ""                                                                                                                
+L_THREAT        ""                                                                                                                
+ER_VISIT        ""                                                                                                                
+HOSPITAL        ""                                                                                                                
+HOSPDAYS        NA                                                                                                                
+X_STAY          ""                                                                                                                
+DISABLE         ""                                                                                                                
+RECOVD          "N"                                                                                                               
+VAX_DATE        "12/30/2019"                                                                                                      
+ONSET_DATE      "12/30/2019"                                                                                                      
+NUMDAYS         "0"                                                                                                               
+LAB_DATA        "None"                                                                                                            
+V_ADMINBY       "MIL"                                                                                                             
+V_FUNDBY        ""                                                                                                                
+OTHER_MEDS      "Loristan"                                                                                                        
+CUR_ILL         "None"                                                                                                            
+HISTORY         "Migraines"                                                                                                       
+PRIOR_VAX       ""                                                                                                                
+SPLTTYPE        ""                                                                                                                
+FORM_VERS       "2"                                                                                                               
+TODAYS_DATE     "01/01/2020"                                                                                                      
+BIRTH_DEFECT    ""                                                                                                                
+OFC_VISIT       ""                                                                                                                
+ER_ED_VISIT     ""                                                                                                                
+ALLERGIES       "Morphine"                                                                                                        
+VAX_TYPE        "VARZOS"                                                                                                          
+VAX_MANU        "GLAXOSMITHKLINE BIOLOGICALS"                                                                                     
+VAX_LOT         ""                                                                                                                
+VAX_DOSE_SERIES "2"                                                                                                               
+VAX_ROUTE       "SYR"                                                                                                             
+VAX_SITE        "LA"                                                                                                              
+VAX_NAME        "ZOSTER (SHINGRIX)"                                                                                               
+SYMPTOM1        "Arthralgia"                                                                                                      
+SYMPTOMVERSION1 "22.1"                                                                                                            
+SYMPTOM2        "Chills"                                                                                                          
+SYMPTOMVERSION2 "22.1"                                                                                                            
+SYMPTOM3        "Injection site pain"                                                                                             
+SYMPTOMVERSION3 "22.1"                                                                                                            
+SYMPTOM4        "Pyrexia"                                                                                                         
+SYMPTOMVERSION4 "22.1"                                                                                                            
+SYMPTOM5        ""                                                                                                                
+SYMPTOMVERSION5 NA                                                                                                                
+All_symptoms    "Arthralgia Chills Injection site pain Pyrexia " # Added manually by concatenate of SYMBOL[1-5]  # Synthetic Field added from SYMPTOM* data   
