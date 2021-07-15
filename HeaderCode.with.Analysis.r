@@ -1,6 +1,7 @@
 
 library(data.table)
 setDTthreads(0)
+library(lubridate)
 library(lattice)
 # Needs unzipped VAERS library from:
 # https://vaers.hhs.gov/data/datasets.html
