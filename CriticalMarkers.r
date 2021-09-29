@@ -1,3 +1,13 @@
+library(data.table)
+library(stringi)
+library(lubridate)
+setDTthreads(0)
+
+# Header Code
+# Needs unzipped VAERS library from:
+# https://vaers.hhs.gov/data/datasets.html
+# Below is full 2020 data and September 2021 data
+
 # File folder should contain like this:
 # 2020VAERSDATA.csv
 # 2020VAERSSYMPTOMS.csv
