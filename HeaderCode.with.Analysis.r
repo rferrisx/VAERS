@@ -1,7 +1,6 @@
 
 library(data.table)
 setDTthreads(0)
-library(lubridate)
 library(lattice)
 # Needs unzipped VAERS library from:
 # https://vaers.hhs.gov/data/datasets.html
@@ -14,10 +13,10 @@ library(lattice)
 
 # merge routines:
 # All 2020 data
-setwd("D:\\Politics\\VAERS\\x2020VAERSData.All.2020")
-Data_Vax <- merge(fread("2021VAERSDATA.csv"),fread("2021VAERSVAX.csv"),all.x=TRUE,by="VAERS_ID")
+setwd("D:\\Politics\\VAERS\\2020VAERSData.2020_07.19.2021")
+Data_Vax <- merge(fread("2020VAERSDATA.csv"),fread("2020VAERSVAX.csv"),all.x=TRUE,by="VAERS_ID")
 setkey(Data_Vax,VAERS_ID)
-Data_Vax_SYMP <- merge(Data_Vax,fread("2021VAERSSYMPTOMS.csv"),all.x=TRUE,by="VAERS_ID")
+Data_Vax_SYMP <- merge(Data_Vax,fread("2020VAERSSYMPTOMS.csv"),all.x=TRUE,by="VAERS_ID")
 setkey(Data_Vax_SYMP,VAERS_ID)
 print("All merged db entry count");nrow(Data_Vax_SYMP)
 print("Duplicated VAERS_ID count");Data_Vax_SYMP[duplicated(VAERS_ID),.N]
@@ -27,8 +26,8 @@ Data_Vax_SYMP_2020 <- Data_Vax_SYMP[order(-VAERS_ID)]
 mergeDVS <- Data_Vax_SYMP[!duplicated(VAERS_ID),]
 mergeDVS2020 <- mergeDVS
 
-# through July 2 2021 data
-setwd("D:\\Politics\\VAERS\\2021VAERSData.07.10.2021")
+# through September 10 2021 data
+setwd("D:\\Politics\\VAERS\\2021VAERSData.09.24.2021")
 Data_Vax <- merge(fread("2021VAERSDATA.csv"),fread("2021VAERSVAX.csv"),all.x=TRUE,by="VAERS_ID")
 setkey(Data_Vax,VAERS_ID)
 Data_Vax_SYMP <- merge(Data_Vax,fread("2021VAERSSYMPTOMS.csv"),all.x=TRUE,by="VAERS_ID")
@@ -41,6 +40,9 @@ Data_Vax_SYMP_2021 <- Data_Vax_SYMP[order(-VAERS_ID)]
 mergeDVS <- Data_Vax_SYMP[!duplicated(VAERS_ID),]
 mergeDVS2021 <- mergeDVS
 mergeDVS <-rbind(mergeDVS2020,mergeDVS2021)
+mergeDVS[,All_symptoms:= (cbind(paste0(SYMPTOM1," ",SYMPTOM2," ",SYMPTOM3," ",SYMPTOM4," ",SYMPTOM5)))]
+fsum <- function(x) {base::sum(x,na.rm=TRUE)}
+
 
 print("Reports,Deaths,Life Threats by Age")
 # CAGE_YR
@@ -74,7 +76,7 @@ mergeDVS[VAX_TYPE == "COVID19" & DIED == "Y"  & between(CAGE_YR,12,30),],by=c("V
 .(VAERS_ID,SEX,AGE_YRS,VAX_DATE,DATEDIED,NUMDAYS=mdy(DATEDIED) - mdy(VAX_DATE),PartialSymptomText=substr(SYMPTOM_TEXT.x,0,225))]
 
 # Covid VAERS Reports
-fsum <- function(x) {sum(x,na.rm=TRUE)}
+fsum <- function(x) {base::sum(x,na.rm=TRUE)}
 dev.new()
 Events <- mergeDVS[VAX_TYPE == "COVID19" & !is.na(AGE_YRS) & AGE_YRS >= 12,.N,.(AGE_YRS)][order(AGE_YRS)];
 Events[,barplot(N,names.arg=AGE_YRS,col=rainbow(nrow(.SD)))]
@@ -82,7 +84,7 @@ Count <- fsum(Events$N)
 mtext(paste0("All Covid19 VAERS Report where AGE_YRS exists and >= 12 years. Count=",Count),cex=1.15,side=3)
 
 # Covid VAERS Reported Deaths (e.g. DIED == "Y")
-fsum <- function(x) {sum(x,na.rm=TRUE)}
+fsum <- function(x) {base::sum(x,na.rm=TRUE)}
 dev.new()
 Deaths <- mergeDVS[VAX_TYPE == "COVID19" & DIED == "Y" & !is.na(AGE_YRS) & AGE_YRS >= 12,.N,.(AGE_YRS)][order(AGE_YRS)];
 Deaths[,barplot(N,names.arg=AGE_YRS,col=rainbow(nrow(.SD)))]
@@ -92,7 +94,7 @@ mtext(paste0("All Covid19 VAERS Reported Deaths (DIED == 'Y')where AGE_YRS exist
 
 
 # Covid VAERS Reported Life Threatening Events (e.g. L_THREAT == "Y")
-fsum <- function(x) {sum(x,na.rm=TRUE)}
+fsum <- function(x) {base::sum(x,na.rm=TRUE)}
 dev.new()
 L_THREAT <- mergeDVS[VAX_TYPE == "COVID19" & L_THREAT == "Y" & !is.na(AGE_YRS) & AGE_YRS >= 12,.N,.(AGE_YRS)][order(AGE_YRS)];
 L_THREAT[,barplot(N,names.arg=AGE_YRS,col=rainbow(nrow(.SD)))]
@@ -101,9 +103,9 @@ mtext(paste0("All Covid19 VAERS Reported L_THREAT == 'Y' where AGE_YRS exists an
 #
 
 
-#P <- rbind(Data_Vax_SYMP_2020,Data_Vax_SYMP_2021)
+# P <- rbind(Data_Vax_SYMP_2020,Data_Vax_SYMP_2021)
 # Write out Covid deaths
-mergeDVS[,All_symptoms:= (cbind(paste0(SYMPTOM1," ",SYMPTOM2," ",SYMPTOM3," ",SYMPTOM4," ",SYMPTOM5)))]
+# mergeDVS[,All_symptoms:= (cbind(paste0(SYMPTOM1," ",SYMPTOM2," ",SYMPTOM3," ",SYMPTOM4," ",SYMPTOM5)))]
 fwrite(mergeDVS[VAX_TYPE == "COVID19" & DIED == "Y",.(VAERS_ID,VAX_DATE,ONSET_DATE,RECVDATE,CAGE_YR,SEX,L_THREAT,DIED,All_symptoms,SYMPTOM_TEXT,LAB_DATA,HISTORY)],"CovidVAXDeaths.some.date.csv")
 CovidVAXDIED <- mergeDVS[VAX_TYPE == "COVID19" & DIED == "Y",.(VAERS_ID,VAX_DATE,ONSET_DATE,RECVDATE,CAGE_YR,SEX,L_THREAT,DIED,All_symptoms,SYMPTOM_TEXT,LAB_DATA,HISTORY)] 
 
@@ -116,7 +118,7 @@ mergeDVS[VAX_TYPE == "COVID19" & DIED == "Y",.(VAX_TYPE,VAX_MANU,VAERS_ID,AGE_YR
 
 
 # Covid VAERS Reports
-fsum <- function(x) {sum(x,na.rm=TRUE)}
+fsum <- function(x) {base::sum(x,na.rm=TRUE)}
 dev.new()
 Events <- mergeDVS[VAX_TYPE == "COVID19" & !is.na(CAGE_YR) & CAGE_YR >= 12,.N,.(CAGE_YR)][order(CAGE_YR)];
 Events[,barplot(N,names.arg=CAGE_YR,col=rainbow(nrow(.SD)))]
@@ -125,7 +127,7 @@ mtext(paste0("All Covid19 VAERS Reports & CAGE_YR >= 12. VAERS_Event_Count=",VAE
 #
 
 # Covid VAERS Reported Deaths (e.g. DIED == "Y")
-fsum <- function(x) {sum(x,na.rm=TRUE)}
+fsum <- function(x) {base::sum(x,na.rm=TRUE)}
 dev.new()
 Deaths <- mergeDVS[VAX_TYPE == "COVID19" & DIED == "Y" & !is.na(CAGE_YR) & CAGE_YR >= 12,.N,.(CAGE_YR)][order(CAGE_YR)];
 Deaths[,barplot(N,names.arg=CAGE_YR,col=rainbow(nrow(.SD)))]
@@ -134,7 +136,7 @@ mtext(paste0("All Covid19 VAERS Reported Deaths (DIED == 'Y') & CAGE_YR >= 12. D
 #
 
 # Covid VAERS Reported Life Threatening Events (e.g. L_THREAT == "Y")
-fsum <- function(x) {sum(x,na.rm=TRUE)}
+fsum <- function(x) {base::sum(x,na.rm=TRUE)}
 
 dev.new()
 L_THREAT <- mergeDVS[VAX_TYPE == "COVID19" & L_THREAT == "Y" & !is.na(CAGE_YR) & CAGE_YR >= 12,.N,.(CAGE_YR)][order(CAGE_YR)];
@@ -142,6 +144,19 @@ L_THREAT[,barplot(N,names.arg=CAGE_YR,col=rainbow(nrow(.SD)))]
 L_THREAT_count <- fsum(L_THREAT$N)
 mtext(paste0("All Covid19 VAERS Reported L_THREAT == 'Y' & CAGE_YR >= 12. ","L_THREAT=",L_THREAT_count),cex=1.5,side=3)
 #
+
+
+L_THREAT <- mergeDVS[VAX_TYPE == "COVID19" & L_THREAT == "Y",.N,.(RECVDATE=mdy(RECVDATE))];
+L_THREAT_count <- fsum(L_THREAT$N)
+dev.new()
+L_THREAT[,
+xyplot(N ~ RECVDATE,
+pch=19,
+cex=1.5,
+col=rainbow(nrow(.SD)),
+main=paste0("All Covid19 VAERS Reported L_THREAT == 'Y' ","L_THREAT=",L_THREAT_count))]
+# mtext(paste0("All Covid19 VAERS Reported L_THREAT == 'Y'","L_THREAT=",L_THREAT_count),cex=1.5,side=3)
+
 
 # COVID.LifeThreatening Corpus
 rm(Life.Threatening)
@@ -290,12 +305,10 @@ Guillain.Barre <- rbind(Guillain.Barre,mergeDVS[grepl("Guillain-Barre",ignore.ca
 Guillain.Barre <- Guillain.Barre[!duplicated(VAERS_ID)]
 
 dev.new()
-Guillain.Barre[VAX_TYPE == "COVID19",.N,barplot(N,names.arg=CAGE_YR,col=rainbow(nrow(.SD)))]
+Guillain.Barre[VAX_TYPE == "COVID19",.N,.(VAX_TYPE,CAGE_YR)][order(CAGE_YR)][,barplot(N,names.arg=CAGE_YR,col=rainbow(nrow(.SD)))]
 Guillain.Barre_count <- fsum(L_THREAT$N)
-mtext(paste0("All Covid19 VAERS Reported L_THREAT == 'Y' & CAGE_YR >= 12. ","L_THREAT=",L_THREAT_count),cex=1.5,side=3)
+mtext(paste0("All Covid19 VAERS Reported L_THREAT == 'Y' & CAGE_YR >= 12. L_THREAT=",L_THREAT_count),cex=1.5,side=3)
 #
-
-
 
 rm(infection)
 infection <-  mergeDVS[grepl("infection",ignore.case=TRUE,SYMPTOM1),]
@@ -432,11 +445,10 @@ m15[is.na(m15)] <-0
 m_all <- m15[order(-Other.VAERS.LOG)]
 m_all[]
 
-
+xtra
 print("Code that generates possible list of integrity errors in the data")
 mergeDVS[VAX_TYPE == "COVID19" & mdy(ONSET_DATE) < mdy(VAX_DATE) ,.N,.(VAX_DATE,ONSET_DATE,NUMDAYS)][order(-N)][1:40]
 mergeDVS[VAX_TYPE == "COVID19",.N,.(VAX_DATE,ONSET_DATE,NUMDAYS)][order(-NUMDAYS)][1:40]
 mergeDVS[VAX_TYPE == "COVID19" & AGE_YRS != CAGE_YR & AGE_YRS < 12,.N,.(AGE_YRS,CAGE_YR)][order(-N)][1:40]
 dupVAERS <- Data_Vax_SYMP_2021[, as.data.table(.SD[duplicated(VAERS_ID),.(VAERS_ID)])];Data_Vax_SYMP_2021[VAERS_ID %in% dupVAERS$VAERS_ID,][,.(VAERS_ID,SYMPTOM1,SYMPTOM2,SYMPTOM3,SYMPTOM4,SYMPTOM5)]
 dupVAERS
-
