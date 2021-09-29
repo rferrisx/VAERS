@@ -1,4 +1,3 @@
-
 library(data.table)
 setDTthreads(0)
 library(lattice)
@@ -445,7 +444,7 @@ m15[is.na(m15)] <-0
 m_all <- m15[order(-Other.VAERS.LOG)]
 m_all[]
 
-xtra
+# extra
 print("Code that generates possible list of integrity errors in the data")
 mergeDVS[VAX_TYPE == "COVID19" & mdy(ONSET_DATE) < mdy(VAX_DATE) ,.N,.(VAX_DATE,ONSET_DATE,NUMDAYS)][order(-N)][1:40]
 mergeDVS[VAX_TYPE == "COVID19",.N,.(VAX_DATE,ONSET_DATE,NUMDAYS)][order(-NUMDAYS)][1:40]
