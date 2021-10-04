@@ -28,7 +28,7 @@ Data_Vax_SYMP_2020 <- Data_Vax_SYMP[order(-VAERS_ID)]
 mergeDVS <- Data_Vax_SYMP[!duplicated(VAERS_ID),]
 mergeDVS2020 <- mergeDVS
 
-# through September 10 2021 data
+# through October 1 2021 data
 setwd("D:\\Politics\\VAERS\\2021VAERSData.10.01.2021")
 Data_Vax <- merge(fread("2021VAERSDATA.csv"),fread("2021VAERSVAX.csv"),all.x=TRUE,by="VAERS_ID")
 setkey(Data_Vax,VAERS_ID)
