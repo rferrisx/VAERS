@@ -1,9 +1,11 @@
+
 library(data.table)
 setDTthreads(0)
 library(lattice)
+library(lubridate)
 # Needs unzipped VAERS library from:
 # https://vaers.hhs.gov/data/datasets.html
-# Below is full 2020 data and June 2021 data
+# Below is full 2020 data and 2021 data through September
 
 # File folder should contain like this:
 # 2020VAERSDATA.csv
@@ -15,7 +17,8 @@ library(lattice)
 setwd("D:\\Politics\\VAERS\\2020VAERSData.2020_07.19.2021")
 Data_Vax <- merge(fread("2020VAERSDATA.csv"),fread("2020VAERSVAX.csv"),all.x=TRUE,by="VAERS_ID")
 setkey(Data_Vax,VAERS_ID)
-Data_Vax_SYMP <- merge(Data_Vax,fread("2020VAERSSYMPTOMS.csv"),all.x=TRUE,by="VAERS_ID")
+Data_Vax_SYMP <- merge(Data_Vax,fread("2020VAERSSYMPTOMS.csv"),all.x=TRUE,by="VAERS_ID")[
+order(VAERS_ID,DIED,L_THREAT)]
 setkey(Data_Vax_SYMP,VAERS_ID)
 print("All merged db entry count");nrow(Data_Vax_SYMP)
 print("Duplicated VAERS_ID count");Data_Vax_SYMP[duplicated(VAERS_ID),.N]
@@ -25,11 +28,12 @@ Data_Vax_SYMP_2020 <- Data_Vax_SYMP[order(-VAERS_ID)]
 mergeDVS <- Data_Vax_SYMP[!duplicated(VAERS_ID),]
 mergeDVS2020 <- mergeDVS
 
-# through September 24 2021 data
-setwd("D:\\Politics\\VAERS\\2021VAERSData.09.24.2021")
+# through September 10 2021 data
+setwd("D:\\Politics\\VAERS\\2021VAERSData.10.01.2021")
 Data_Vax <- merge(fread("2021VAERSDATA.csv"),fread("2021VAERSVAX.csv"),all.x=TRUE,by="VAERS_ID")
 setkey(Data_Vax,VAERS_ID)
-Data_Vax_SYMP <- merge(Data_Vax,fread("2021VAERSSYMPTOMS.csv"),all.x=TRUE,by="VAERS_ID")
+Data_Vax_SYMP <- merge(Data_Vax,fread("2021VAERSSYMPTOMS.csv"),all.x=TRUE,by="VAERS_ID")[
+order(VAERS_ID,DIED,L_THREAT)]
 setkey(Data_Vax_SYMP,VAERS_ID)
 print("All merged db entry count");nrow(Data_Vax_SYMP)
 print("Duplicated VAERS_ID count");Data_Vax_SYMP[duplicated(VAERS_ID),.N]
@@ -38,7 +42,8 @@ print("Not duplicated VAERS_ID count");Data_Vax_SYMP[!duplicated(VAERS_ID),.N]
 Data_Vax_SYMP_2021 <- Data_Vax_SYMP[order(-VAERS_ID)]
 mergeDVS <- Data_Vax_SYMP[!duplicated(VAERS_ID),]
 mergeDVS2021 <- mergeDVS
-mergeDVS <-rbind(mergeDVS2020,mergeDVS2021)
+mergeDVS <-rbind(mergeDVS2020,mergeDVS2021)[
+order(VAERS_ID,DIED,L_THREAT)]
 mergeDVS[,All_symptoms:= (cbind(paste0(SYMPTOM1," ",SYMPTOM2," ",SYMPTOM3," ",SYMPTOM4," ",SYMPTOM5)))]
 fsum <- function(x) {base::sum(x,na.rm=TRUE)}
 
@@ -154,7 +159,11 @@ pch=19,
 cex=1.5,
 col=rainbow(nrow(.SD)),
 main=paste0("All Covid19 VAERS Reported L_THREAT == 'Y' ","L_THREAT=",L_THREAT_count))]
-# mtext(paste0("All Covid19 VAERS Reported L_THREAT == 'Y'","L_THREAT=",L_THREAT_count),cex=1.5,side=3)
+#
+
+
+mtext(paste0("All Covid19 VAERS Reported L_THREAT == 'Y'","L_THREAT=",L_THREAT_count),cex=1.5,side=3)
+#
 
 
 # COVID.LifeThreatening Corpus
@@ -444,10 +453,10 @@ m15[is.na(m15)] <-0
 m_all <- m15[order(-Other.VAERS.LOG)]
 m_all[]
 
-# extra
 print("Code that generates possible list of integrity errors in the data")
 mergeDVS[VAX_TYPE == "COVID19" & mdy(ONSET_DATE) < mdy(VAX_DATE) ,.N,.(VAX_DATE,ONSET_DATE,NUMDAYS)][order(-N)][1:40]
 mergeDVS[VAX_TYPE == "COVID19",.N,.(VAX_DATE,ONSET_DATE,NUMDAYS)][order(-NUMDAYS)][1:40]
 mergeDVS[VAX_TYPE == "COVID19" & AGE_YRS != CAGE_YR & AGE_YRS < 12,.N,.(AGE_YRS,CAGE_YR)][order(-N)][1:40]
 dupVAERS <- Data_Vax_SYMP_2021[, as.data.table(.SD[duplicated(VAERS_ID),.(VAERS_ID)])];Data_Vax_SYMP_2021[VAERS_ID %in% dupVAERS$VAERS_ID,][,.(VAERS_ID,SYMPTOM1,SYMPTOM2,SYMPTOM3,SYMPTOM4,SYMPTOM5)]
 dupVAERS
+
