@@ -28,8 +28,8 @@ Data_Vax_SYMP_2020 <- Data_Vax_SYMP[order(-VAERS_ID)]
 mergeDVS <- Data_Vax_SYMP[!duplicated(VAERS_ID),]
 mergeDVS2020 <- mergeDVS
 
-# through September 24 2021 data
-setwd("D:\\Politics\\VAERS\\2021VAERSData.09.24.2021")
+# through October 8th data
+setwd("D:\\Politics\\VAERS\\2021VAERSData.10.08.2021")
 Data_Vax <- merge(fread("2021VAERSDATA.csv"),fread("2021VAERSVAX.csv"),all.x=TRUE,by="VAERS_ID")
 setkey(Data_Vax,VAERS_ID)
 Data_Vax_SYMP <- merge(Data_Vax,fread("2021VAERSSYMPTOMS.csv"),all.x=TRUE,by="VAERS_ID")
@@ -178,3 +178,11 @@ x <- mergeDVS[between(AGE_YRS,100,109),];CritMarks()
 x <- mergeDVS[SEX == "M",];CritMarks()
 x <- mergeDVS[SEX == "F",];CritMarks()
 x <- mergeDVS[SEX == "U",];CritMarks()
+
+# Aggregated Measures by VAX_MANU
+
+x <- mergeDVS[VAX_MANU == "MODERNA",];CritMarks()
+x <- mergeDVS[VAX_MANU == "PFIZER\\BIONTECH",];CritMarks()
+x <- mergeDVS[VAX_MANU == "JANSSEN",];CritMarks()
+
+
