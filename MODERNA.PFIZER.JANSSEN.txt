@@ -1,0 +1,568 @@
+ 
+ # IMPORTANT: *Open in Notepad or other text editor. In notepad from the format menu unclick wordwrap to view this document*
+ # Compare US Vaccine (AE) entries in the VAERS DB.
+ # ADHOC comparision of US VAX VAERS AE from SYMPTOM* fields. This code does exactly what is written.
+ # Whether this output is useful ... for comparing MODERNA, PFIZER , JANSSEN ... is unknown.
+ # This output can't possibly begin to pick up all the terrible categories of Vaccine Injuries for COVID-19.
+ # See  
+ # VAERS data is poorly curated and fields inconsistent or inaccurate. For example,binary fields (e.g. DIED == "Y") do not pick up all deaths among many other errors...
+ # Header Code is here: https://github.com/rferrisx/VAERS/blob/main/HeaderCode.with.Analysis.r
+ 
+ library(data.table)
+ library(stringi)
+# Run Header Code to get mergeDVS for all 2020 and 2021 Adverse Events: https://github.com/rferrisx/VAERS/blob/main/HeaderCode.with.Analysis.r
+
+# Total number of Adverse Events (AE) or VACCINE injuries:
+ mergeDVS[VAX_TYPE == "COVID19",.N,.(VAX_MANU)][order(-N)]
+               VAX_MANU      N
+1:              MODERNA 281846
+2:     PFIZER\\BIONTECH 256337
+3:              JANSSEN  54236 # Note small volume AE for Janssen. Volume counts for AE will be representative.
+4: UNKNOWN MANUFACTURER   1266 # Will not analyze for "UNKNOWN MANUFACTURER"
+
+# Critical Marks
+# Run  critical markers function
+# See Critical Markers code here: https://github.com/rferrisx/VAERS/blob/main/CriticalMarkers.r
+# First, Critical Markers Code for all AE data combined. Then MODERNA, PFIZER, JANSSEN respectively
+
+x <- mergeDVS;CritMarks() # All COVID VAX_TYPES
+                    Factor All.Reported.Covid.AE All.Reported.Covid.AE.Deaths
+ 1: CovidAE.Reported.Total                593685                         7437
+ 2:                   DIED                  7437                         7437
+ 3:                DISABLE                  8627                           77
+ 4:            ER_ED_VISIT                 74462                         1722
+ 5:               HOSPITAL                 34879                         2312
+ 6:          HOSPITAL.DAYS                 23883                         1612
+ 7:               L_THREAT                  9010                          307
+ 8:              Age.10.30                 96537                          142
+ 9:              Age.31.55                226808                          707
+10:             Age.56.120                212033                         5902
+11:             SEX.Female                406171                         3102
+12:               SEX.Male                167514                         4017
+13:                SEX.UNK                 20000                          318
+
+
+x <- mergeDVS[VAX_MANU == "MODERNA",];CritMarks()
+                    Factor All.Reported.Covid.AE All.Reported.Covid.AE.Deaths
+ 1: CovidAE.Reported.Total                281846                         3238
+ 2:                   DIED                  3238                         3238
+ 3:                DISABLE                  3266                           28
+ 4:            ER_ED_VISIT                 27936                          768
+ 5:               HOSPITAL                 13500                          887
+ 6:          HOSPITAL.DAYS                  9260                          629
+ 7:               L_THREAT                  3487                          132
+ 8:              Age.10.30                 36244                           46
+ 9:              Age.31.55                101338                          305
+10:             Age.56.120                117555                         2736
+11:             SEX.Female                198442                         1342
+12:               SEX.Male                 72737                         1835
+13:                SEX.UNK                 10667                           61
+
+x <- mergeDVS[VAX_MANU == "PFIZER\\BIONTECH",];CritMarks()
+                    Factor All.Reported.Covid.AE All.Reported.Covid.AE.Deaths
+ 1: CovidAE.Reported.Total                256337                         3384
+ 2:                   DIED                  3384                         3384
+ 3:                DISABLE                  4434                           40
+ 4:            ER_ED_VISIT                 38647                          825
+ 5:               HOSPITAL                 17479                         1176
+ 6:          HOSPITAL.DAYS                 11936                          798
+ 7:               L_THREAT                  4384                          141
+ 8:              Age.10.30                 49766                           73
+ 9:              Age.31.55                103573                          289
+10:             Age.56.120                 81050                         2687
+11:             SEX.Female                175250                         1423
+12:               SEX.Male                 75522                         1780
+13:                SEX.UNK                  5565                          181
+
+x <- mergeDVS[VAX_MANU == "JANSSEN",];CritMarks()
+                    Factor All.Reported.Covid.AE All.Reported.Covid.AE.Deaths
+ 1: CovidAE.Reported.Total                 54236                          783
+ 2:                   DIED                   783                          783
+ 3:                DISABLE                   896                            9
+ 4:            ER_ED_VISIT                  7667                          122
+ 5:               HOSPITAL                  3749                          242
+ 6:          HOSPITAL.DAYS                  2596                          180
+ 7:               L_THREAT                  1097                           32
+ 8:              Age.10.30                 10352                           21
+ 9:              Age.31.55                 21468                          109
+10:             Age.56.120                 13012                          456
+11:             SEX.Female                 31716                          326
+12:               SEX.Male                 18837                          382
+13:                SEX.UNK                  3683                           75
+
+ 
+ # column bind and count the 'aggregated SYMPTOM* fields' for each VAERS_ID AE
+ # These are relative SYMPTOM* field phrase for term counts.
+ # Sample SYMPTOM fields (turn word wrap off):
+
+cat('
+mergeDVS[VAX_TYPE == "COVID19",.(VAX_MANU,All_symptoms,SYMPTOM1,SYMPTOM2,SYMPTOM3,SYMPTOM4,SYMPTOM5)][sample(.N), c(.SD[1:2], .N),keyby="VAX_MANU"]
+               VAX_MANU                                                                          All_symptoms                          SYMPTOM1                        SYMPTOM2      SYMPTOM3                 SYMPTOM4                 SYMPTOM5       
+1:              JANSSEN                                    Immediate post-injection reaction Nausea Syncope   Immediate post-injection reaction                          Nausea       Syncope                                                    54236
+2:              JANSSEN                               Chills Fatigue Headache Hypoaesthesia Pain in extremity                            Chills                         Fatigue      Headache            Hypoaesthesia        Pain in extremity  54236
+3:              MODERNA                                                      Abdominal pain upper Headache                 Abdominal pain upper                        Headache                                                                 281846
+4:              MODERNA                                             Feeling hot Inflammation Pain Tenderness                        Feeling hot                    Inflammation          Pain               Tenderness                          281846
+5:     PFIZER\\BIONTECH         Arthralgia Joint range of motion decreased Periarthritis X-ray limb abnormal                         Arthralgia Joint range of motion decreased Periarthritis      X-ray limb abnormal                          256337
+6:     PFIZER\\BIONTECH Angioedema Chest discomfort Dry eye Electrocardiogram normal Irritable bowel syndrome                        Angioedema                Chest discomfort       Dry eye Electrocardiogram normal Irritable bowel syndrome 256337
+7: UNKNOWN MANUFACTURER                                             Body temperature Chills Pyrexia Vomiting                   Body temperature                          Chills       Pyrexia                 Vomiting                            1266
+8: UNKNOWN MANUFACTURER                       Arthralgia Ear pain Headache Herpes zoster Herpes zoster oticus                        Arthralgia                        Ear pain      Headache            Herpes zoster     Herpes zoster oticus   1266
+')
+
+
+ cbind(
+ mergeDVS[VAX_MANU == "MODERNA",.N,.(All_symptoms)][order(-N)][1:50],
+ mergeDVS[VAX_MANU == "PFIZER\\BIONTECH",.N,.(All_symptoms)][order(-N)][1:50],
+ mergeDVS[VAX_MANU == "JANSSEN",.N,.(All_symptoms)][order(-N)][1:50]
+ )
+
+                                                                           MODERNA All_symptoms    N                                                       PFIZER All_symptoms   N
+ 1:                                       Product administered to patient of inappropriate age     3883                                                Product storage error     3911
+ 2:                                           Inappropriate schedule of product administration     2113                                     COVID-19 SARS-CoV-2 test positive    2520
+ 3:                                                               Expired product administered     2104                                      Interchange of vaccine products     2291
+ 4:                                                                                       Rash     1984                                                            Dizziness     2018
+ 5:                                                                          Unevaluable event     1904                                                    Unevaluable event     1857
+ 6:                                                                          Pain in extremity     1722                                                             Tinnitus     1716
+ 7:                                                                      Product storage error     1394                                                                 Rash     1694
+ 8:                                                                                  Dizziness     1339                                                    Pain in extremity     1461
+ 9:                                                                                   Tinnitus     1307                                                        Herpes zoster     1332
+10:                                                            Interchange of vaccine products     1186                                                            Urticaria     1246
+11:                                                           COVID-19 SARS-CoV-2 test positive    1158                                                      Lymphadenopathy     1196
+12:                       No adverse event Product administered to patient of inappropriate age    1135                 Product administered to patient of inappropriate age     1195
+13:                                                                                   Headache     1047                                                             Headache     1192
+14:                                                                                  Urticaria     1029                              COVID-19 Drug ineffective SARS-CoV-2 test   1097
+15:                                                                Product dose omission issue      968                     Inappropriate schedule of product administration     1069
+16:                      Injection site erythema Injection site pruritus Injection site swelling    960                                            Product preparation issue      978
+17:                                                                      Vaccination site pain      943                                          Incorrect dose administered      929
+18:                                                          Poor quality product administered      892                                                              Syncope      920
+19:                                                                              Herpes zoster      860                                                             Pruritus      814
+20:                                                                   Vaccination complication      846                                                                Death      770
+21:                                                                                      Death      818                                                        Hypoaesthesia      664
+22:                                                                                    Pyrexia      782                                                  Injection site pain      581
+23:                                                                            Lymphadenopathy      697                                                         Paraesthesia      574
+24:                                                                                   Pruritus      675                                                             COVID-19      573
+25:                                                                        Injection site rash      655                                                Vaccination site pain      556
+26:                                                                        Injection site pain      648                                              COVID-19 SARS-CoV-2 test     555
+27:                                             Injection site erythema Injection site pruritus     628                                            Hypoaesthesia Paraesthesia     508
+28:                                                                                   COVID-19      623                                                           Arthralgia      486
+29:                                                                Incorrect dose administered      609                                                              Pyrexia      486
+30:  Poor quality product administered Product storage error Product temperature excursion issue    600               Extra dose administered Interchange of vaccine products     478
+31:                                                                               Pruritus Rash     588                                                    Pruritus Urticaria     468
+32:                                                                                    Myalgia      571                                                         Bell's palsy      466
+33:                                                                                    Fatigue      558                                                         Pruritus Rash     460
+34:                                                                                    Syncope      507                                         Expired product administered      457
+35: Injection site erythema Injection site pruritus Injection site swelling Injection site warmth   502                                                              Fatigue      445
+36:                                                                                  Diarrhoea      457                                                      Dizziness Nausea     428
+37:                                                                                  Underdose      454                                                            Diarrhoea      411
+38:                                                                                 Arthralgia      448                                              Extra dose administered      407
+39:                                                                              Hypoaesthesia      436                                       Lymph node pain Lymphadenopathy     375
+40:                                                                  Chills Headache Pain Pyrexia   426                                                             Dyspnoea      372
+41:                                             Injection site erythema Injection site swelling     421 No adverse event Product administered to patient of inappropriate age     358
+42:                                                                          Pruritus Urticaria     416                                                    Chills Pain Pyrexia    353
+43:                                                                              Chills Pyrexia     413                      Interchange of vaccine products No adverse event     338
+44:                                                                    Extra dose administered      405                                                               Nausea      333
+45:                                                                          Chills Pain Pyrexia    391                                                           Chest pain      328
+46:                                                                    Injection site erythema      383                                                            Dysgeusia      316
+47:                                                                               Bell's palsy      367                                            Chills Headache Pain Pyrexia   313
+48:                                                                                       Pain      366                                                                 Pain      310
+49:                           Inappropriate schedule of product administration No adverse event     366                                             SARS-CoV-2 test positive      306
+50:                        Injection site erythema Injection site swelling Injection site warmth    364                    Expired product administered Product storage error     305
+                                                                                      All_symptoms    N                                                             All_symptoms    N
+                                                      JANSSEN   All_symptoms   N
+ 1:                 Product administered to patient of inappropriate age     542
+ 2:                                     COVID-19 SARS-CoV-2 test positive    388
+ 3:                                         Expired product administered     383
+ 4:                                                             Headache     369
+ 5:                                                              Syncope     365
+ 6:                                                            Dizziness     351
+ 7:                                                    Pain in extremity     294
+ 8: No adverse event Product administered to patient of inappropriate age    237
+ 9:                                                                 Rash     236
+10:                                                    Unevaluable event     216
+11:               Poor quality product administered Product storage error    215
+12:                                                             Tinnitus     206
+13:                                      Interchange of vaccine products     196
+14:                                                Product storage error     185
+15:                                                              Pyrexia     177
+16:                                                  Injection site pain     166
+17:                                                                Death     164
+18:                                                              Fatigue     138
+19:                                            Chills Headache Pain Pyrexia  137
+20:                                                        Chills Pyrexia    137
+21:                                                           Thrombosis     135
+22:                                                    Chills Pain Pyrexia   132
+23:                                                            Urticaria     127
+24:                                                        Adverse event     115
+25:                                                Loss of consciousness     109
+26:                                                Chills Headache Pyrexia   108
+27:                                    Poor quality product administered     108
+28:                                                        Herpes zoster     106
+29:                                                Adverse drug reaction     101
+30:                                              Extra dose administered     101
+31:                                     Chills Fatigue Headache Pain Pyrexia 100
+32:                                                  Headache Pain Pyrexia   100
+33:                        SARS-CoV-2 antibody test Therapy non-responder     93
+34:                                                          Pain Pyrexia     90
+35:               Extra dose administered Interchange of vaccine products     90
+36:                      Interchange of vaccine products No adverse event     90
+37:                                                             COVID-19      90
+38:                                          Incorrect dose administered      88
+39:                                                             Pruritus      87
+40:                                                      Dizziness Nausea     85
+41:                                                      Headache Pyrexia     85
+42:                 SARS-CoV-2 test Suspected COVID-19 Vaccination failure    85
+43:                                                        Hypoaesthesia      81
+44:                                Suspected COVID-19 Vaccination failure     78
+45:                                                                 Pain      75
+46:                                                         Paraesthesia      75
+47:    Off label use Product administered to patient of inappropriate age     74
+48:                                                               Chills      72
+49:                                                            Underdose      72
+50:                                            Hypoaesthesia Paraesthesia     71
+                                                                All_symptoms   N
+ 
+ # Like the cbind above but merge on 'All_symptoms' and sort by top MODERNA N
+ merge(
+ merge(
+ mergeDVS[VAX_MANU == "MODERNA",.N,.(All_symptoms)][order(-N)][1:30000],
+ mergeDVS[VAX_MANU == "PFIZER\\BIONTECH",.N,.(All_symptoms)][order(-N)][1:30000],by="All_symptoms"),
+ mergeDVS[VAX_MANU == "JANSSEN",.N,.(All_symptoms)][order(-N)][1:30000],by="All_symptoms")[,
+ setnames(.SD,c("All_symptoms","MODERNA","PFIZER","JANSSEN"))][order(-MODERNA)][1:99]
+                                                                                                         All_symptoms MODERNA PFIZER JANSSEN
+ 1:                                                          Product administered to patient of inappropriate age        3883   1195     542
+ 2:                                                              Inappropriate schedule of product administration        2113   1069      46
+ 3:                                                                                  Expired product administered        2104    457     383
+ 4:                                                                                                          Rash        1984   1694     236
+ 5:                                                                                             Unevaluable event        1904   1857     216
+ 6:                                                                                             Pain in extremity        1722   1461     294
+ 7:                                                                                         Product storage error        1394   3911     185
+ 8:                                                                                                     Dizziness        1339   2018     351
+ 9:                                                                                                      Tinnitus        1307   1716     206
+10:                                                                               Interchange of vaccine products        1186   2291     196
+11:                                                                              COVID-19 SARS-CoV-2 test positive       1158   2520     388
+12:                                          No adverse event Product administered to patient of inappropriate age       1135    358     237
+13:                                                                                                      Headache        1047   1192     369
+14:                                                                                                     Urticaria        1029   1246     127
+15:                                         Injection site erythema Injection site pruritus Injection site swelling       960     68       5
+16:                                                                                         Vaccination site pain         943    556       2
+17:                                                                             Poor quality product administered         892      5     108
+18:                                                                                                 Herpes zoster         860   1332     106
+19:                                                                                      Vaccination complication         846     33      25
+20:                                                                                                         Death         818    770     164
+21:                                                                                                       Pyrexia         782    486     177
+22:                                                                                               Lymphadenopathy         697   1196      31
+23:                                                                                                      Pruritus         675    814      87
+24:                                                                                           Injection site rash         655     54       3
+25:                                                                                           Injection site pain         648    581     166
+26:                                                                Injection site erythema Injection site pruritus        628     36       4
+27:                                                                                                      COVID-19         623    573      90
+28:                                                                                   Incorrect dose administered         609    929      88
+29:                                                                                                  Pruritus Rash        588    460      53
+30:                                                                                                       Myalgia         571    183      44
+31:                                                                                                       Fatigue         558    445     138
+32:                                                                                                       Syncope         507    920     365
+33:                    Injection site erythema Injection site pruritus Injection site swelling Injection site warmth      502     31       1
+34:                                                                                                     Diarrhoea         457    411      43
+35:                                                                                                     Underdose         454    262      72
+36:                                                                                                    Arthralgia         448    486      68
+37:                                                                                                 Hypoaesthesia         436    664      81
+38:                                                                                     Chills Headache Pain Pyrexia      426    313     137
+39:                                                                Injection site erythema Injection site swelling        421     76       8
+40:                                                                                             Pruritus Urticaria        416    468      47
+41:                                                                                                 Chills Pyrexia        413    239     137
+42:                                                                                       Extra dose administered         405    407     101
+43:                                                                                             Chills Pain Pyrexia       391    353     132
+44:                                                                                       Injection site erythema         383     71       5
+45:                                                                                                  Bell's palsy         367    466      32
+46:                                              Inappropriate schedule of product administration No adverse event        366    237      10
+47:                                                                                                          Pain         366    310      75
+48:                                           Injection site erythema Injection site swelling Injection site warmth       364     40       4
+49:                      Injection site erythema Injection site pain Injection site pruritus Injection site swelling      360     31       3
+50:                                                                                                      Dyspnoea         357    372      49
+51:                                           Injection site erythema Injection site pruritus Injection site warmth       353     16       1
+52:                                                             Expired product administered Product storage error        347    305      20
+53:                                                                                              Erythema Pruritus        333    148      14
+54:                                                                                                  Paraesthesia         333    574      75
+55:                                                                    Injection site pruritus Injection site rash        329     26       2
+56:                                                                                     Hypoaesthesia Paraesthesia        324    508      71
+57:                                                                                       COVID-19 SARS-CoV-2 test        323    555      40
+58:                                                               Interchange of vaccine products No adverse event        323    338      90
+59:                                             Injection site erythema Injection site pain Injection site swelling       320     54      18
+60: Injection site erythema Injection site pain Injection site pruritus Injection site swelling Injection site warmth     306     18       3
+61:                                                                                              No adverse event         299    275      59
+62:                                                                                             Rash Rash pruritic        296    239      41
+63:                                             Injection site erythema Injection site pruritus Injection site rash       293     17       1
+64:                                                                                     Exposure during pregnancy         291     18       8
+65:                                                                            Maternal exposure during pregnancy         290      2       2
+66:                                                                                         Chills Headache Pyrexia       275    179     108
+67:                                                                                                 Rash Urticaria        272    289      45
+68:                                                                                                        Nausea         259    333      53
+69:                                                                                               Dizziness Nausea        241    428      85
+70:                                                                  Injection site erythema Injection site warmth        238     19       1
+71:                                                                                                      Erythema         237    103      10
+72:                                                                              Chills Fatigue Headache Pain Pyrexia     236    182     100
+73:                                                                                                   Pain Pyrexia        230    182      90
+74:                                                                                Lymph node pain Lymphadenopathy        223    375      15
+75:                                                                                                 Rash pruritic         222    172      29
+76:                                                                                                       Vertigo         221    224      22
+77:                                                                                                        Chills         219    130      72
+78:                        Injection site erythema Injection site pain Injection site swelling Injection site warmth      212     36       6
+79:                                                                                           Headache Pain Pyrexia       211    179     100
+80:                                                                                          Heart rate increased         211    201      28
+81:                                                                  Expired product administered No adverse event        209    144      68
+82:                                                                                      Fatigue Pain in extremity        203    180      28
+83:                                                                                               Headache Pyrexia        201    164      85
+84:                                                        Extra dose administered Interchange of vaccine products        196    478      90
+85:                                                                                           Peripheral swelling         196    157      32
+86:                                                                               Chills Headache Nausea Pain Pyrexia     195    128      65
+87:                                                                                                    Chest pain         194    328      34
+88:                                                                                     Headache Pain in extremity        194    181      44
+89:                                                                                               Fatigue Headache        193    243      69
+90:                                                                                                  Palpitations         193    304      19
+91:                                                                                      Chills Fatigue Pain Pyrexia      192    151      69
+92:                                                                        Arthralgia Chills Fatigue Headache Myalgia     188    110      19
+93:                                                                                        Syringe issue Underdose        185     74       9
+94:                                                                                                     Dysgeusia         182    316      27
+95:                                                                                      Erythema Pruritus Swelling       180     17       1
+96:                                                                                     Vaccination site erythema         180     26       1
+97:                                                                                                     Epistaxis         179    273      49
+98:                                                                                         Loss of consciousness         179    290     109
+99:                                                                                                       Illness         178    122      41
+                                                                                                         All_symptoms MODERNA PFIZER JANSSEN
+ 
+ 
+ # split SYMPTOM fields into single world terms,remove empty fields,decapitalize all terms,sort by count 
+ stack.symptoms <- function(x)
+ {
+ m <- x[,tstrsplit(All_symptoms, " ",fill="")]
+ l <- {}; m[,for(i in names(.SD)) {l <<- cbind(append(l,get(i)))}]
+ l <- as.data.table(l)[!stringi::stri_isempty(V1),.(terms=as.character(V1))]
+ stack.symptom.terms <<- l 
+ }
+ 
+ l <- as.data.table({})
+ for(i in c("MODERNA","PFIZER\\BIONTECH","JANSSEN")) {
+ stack.symptoms(mergeDVS[VAX_TYPE == "COVID19" & VAX_MANU == i,])
+ stack.symptom.terms <- stack.symptom.terms[,
+ setnames(as.data.table(stringi::stri_trans_tolower(terms)),"V1","terms")]
+ nrow(stack.symptom.terms)
+ stack.symptom.terms[,.N,.(terms)][order(-N)]
+ l <<- cbind(l,stack.symptom.terms[,.N,.(terms)][order(-N)][1:100])}
+ l # For "MODERNA","PFIZER\\BIONTECH","JANSSEN" respectively
+ 
+                 terms      N             terms     N             terms     N
+  1:              site 127486              pain 82757              pain 19778
+  2:         injection 103788          headache 39016          headache 12512
+  3:              pain 100752           fatigue 33871            chills 10411
+  4:          headache  44959         dizziness 29520           fatigue  8859
+  5:           fatigue  39917            chills 29086         dizziness  7371
+  6:            chills  39849              site 28205           pyrexia  6569
+  7:          erythema  39741              test 27343             blood  5412
+  8:              rash  36181             blood 24609              site  5155
+  9:          swelling  35382         injection 21578              test  5116
+ 10:          pruritus  33330             chest 19330         injection  5111
+ 11:       vaccination  25560           pyrexia 17988            nausea  4641
+ 12:           pyrexia  24890              rash 17389                in  3954
+ 13:         dizziness  24625          swelling 17382           feeling  3823
+ 14:                in  23258                in 17133                of  3768
+ 15:         extremity  21030            nausea 17127          abnormal  3714
+ 16:           product  21003        arthralgia 15399             chest  3566
+ 17:             blood  19122        discomfort 15245         extremity  3428
+ 18:            nausea  18108                of 15117        arthralgia  3230
+ 19:                of  18012         increased 14778          dyspnoea  3029
+ 20:        arthralgia  16924         extremity 14737           product  2917
+ 21:              test  16711           product 14091         increased  2917
+ 22:           feeling  14627        sars-cov-2 13993        discomfort  2876
+ 23:        discomfort  14106          abnormal 13933            normal  2723
+ 24:           myalgia  13897          dyspnoea 13905          asthenia  2664
+ 25:             chest  13743           feeling 13266     hyperhidrosis  2567
+ 26:         increased  13400          covid-19 13086      administered  2516
+ 27:          abnormal  13279          pruritus 12372           myalgia  2502
+ 28:      administered  13125            normal 12244          swelling  2487
+ 29:         decreased  11873     hypoaesthesia 10358         abdominal  2438
+ 30:          dyspnoea  11769         decreased  9903         decreased  2424
+ 31:          asthenia  11376      paraesthesia  9885              body  2379
+ 32:            warmth  10954          asthenia  9762       temperature  2362
+ 33:     inappropriate   9393          erythema  9517              rash  2330
+ 34:            normal   9129           myalgia  9005          tomogram  2113
+ 35:         diarrhoea   8865          disorder  8949      computerised  2108
+ 36:         abdominal   8173         abdominal  8728          covid-19  2097
+ 37:              skin   8067         diarrhoea  8147     hypoaesthesia  1860
+ 38:     hypoaesthesia   7882              body  8006          disorder  1841
+ 39:       temperature   7732             cough  7813         diarrhoea  1741
+ 40:          reaction   7572       temperature  7611        sars-cov-2  1695
+ 41:          disorder   7468   lymphadenopathy  7459           syncope  1618
+ 42:         urticaria   7374       vaccination  7397              loss  1608
+ 43:              body   7353          positive  7117              back  1485
+ 44:      paraesthesia   7294     hyperhidrosis  6907              cold  1449
+ 45:        peripheral   7131              rate  6835     consciousness  1434
+ 46:                to   6964      administered  6805                to  1426
+ 47:          covid-19   6857             heart  6676             cough  1399
+ 48:        induration   6551          tomogram  6497      paraesthesia  1360
+ 49:             cough   6385      computerised  6461               hot  1317
+ 50:     hyperhidrosis   6223 electrocardiogram  6316          pruritus  1312
+ 51:   lymphadenopathy   6126         urticaria  6094              rate  1308
+ 52:        sars-cov-2   5754          pressure  6017             heart  1260
+ 53:          tomogram   5658              oral  5822          erythema  1250
+ 54:             event   5646             error  5700        thrombosis  1213
+ 55:      computerised   5639           malaise  5558           illness  1163
+ 56:           patient   5607               hot  5290             event  1154
+ 57:               age   5553              back  4991 electrocardiogram  1133
+ 58:               hot   5408           syncope  4864           adverse  1125
+ 59:              rate   5401             event  4767            muscle  1124
+ 60:             heart   5233              loss  4763     inappropriate  1117
+ 61:           illness   5095            throat  4703         influenza  1108
+ 62:      erythematous   4978               eye  4680              head  1102
+ 63:              back   4889             x-ray  4616          reaction  1097
+ 64:           malaise   4861           storage  4602           malaise  1089
+ 65:          appetite   4829          vomiting  4566          vomiting  1084
+ 66:              oral   4583           vaccine  4512             x-ray  1081
+ 67:          pressure   4482         condition  4449          pressure  1066
+ 68:          vomiting   4472        aggravated  4400          appetite  1006
+ 69:    administration   4414          tinnitus  4332          positive   985
+ 70:         influenza   4402          reaction  4203              like   971
+ 71: electrocardiogram   4291              skin  4192               eye   966
+ 72:              dose   4268     inappropriate  4189           patient   966
+ 73:           adverse   4244        peripheral  4175               age   957
+ 74:          positive   4010                to  4123             count   922
+ 75:             issue   3958          flushing  4047             upper   905
+ 76:               eye   3919            herpes  4045        peripheral   861
+ 77:          pruritic   3861            muscle  3841         condition   844
+ 78:              cold   3755     consciousness  3710        aggravated   839
+ 79:         condition   3738           anxiety  3671              skin   824
+ 80:              warm   3736         sensation  3642         urticaria   789
+ 81:        aggravated   3693              cold  3632       disturbance   779
+ 82:              like   3658          products  3532          migraine   771
+ 83:              loss   3654       interchange  3529         sensation   751
+ 84:             x-ray   3643      palpitations  3506              fall   735
+ 85:              mass   3582           cardiac  3448           anxiety   718
+ 86:          schedule   3575             count  3447             error   716
+ 87:         sensation   3531     oropharyngeal  3388                no   715
+ 88:            muscle   3403          appetite  3348            spasms   680
+ 89:          mobility   3345              head  3326              gait   657
+ 90:                no   3285            zoster  3317           burning   647
+ 91:            throat   3279               ear  3230          insomnia   642
+ 92:          tinnitus   3252           illness  3228           vaccine   632
+ 93:             error   3092              dose  3144            pallor   619
+ 94:           vaccine   3054             upper  3064          tinnitus   601
+ 95:           burning   2931           adverse  3004           imaging   599
+ 96:       disturbance   2921           burning  2938            tremor   593
+ 97:            herpes   2918    administration  2883             sweat   581
+ 98:           expired   2909         influenza  2861              oral   578
+ 99:         pregnancy   2905         tightness  2813        laboratory   574
+100:           cardiac   2901              drug  2776           therapy   572
+                 terms      N             terms     N             terms     N
+ 
+ # split SYMPTOM fields into single world terms,stack,remove empty fields,decapitalize terms,sort by count 
+ # Same as above but filter by 'nchar(terms) >= 10' ... to pick up medical terms
+ l <- as.data.table({})
+ for(i in c("MODERNA","PFIZER\\BIONTECH","JANSSEN")) {
+ stack.symptoms(mergeDVS[VAX_TYPE == "COVID19" & VAX_MANU == i,])
+ stack.symptom.terms <- stack.symptom.terms[,
+ setnames(as.data.table(stringi::stri_trans_tolower(terms)),"V1","terms")]
+ nrow(stack.symptom.terms)
+ stack.symptom.terms[,.N,.(terms)][order(-N)]
+ l <<- cbind(l,stack.symptom.terms[nchar(terms) >= 10,.N,.(terms)][order(-N)][1:100])}
+ l # For "MODERNA","PFIZER\\BIONTECH","JANSSEN" respectively
+
+                 terms     N             terms     N             terms    N
+  1:       vaccination 25560        arthralgia 15399        arthralgia 3230
+  2:        arthralgia 16924        discomfort 15245        discomfort 2876
+  3:        discomfort 14106        sars-cov-2 13993     hyperhidrosis 2567
+  4:      administered 13125     hypoaesthesia 10358      administered 2516
+  5:     inappropriate  9393      paraesthesia  9885       temperature 2362
+  6:     hypoaesthesia  7882       temperature  7611      computerised 2108
+  7:       temperature  7732   lymphadenopathy  7459     hypoaesthesia 1860
+  8:      paraesthesia  7294       vaccination  7397        sars-cov-2 1695
+  9:        peripheral  7131     hyperhidrosis  6907     consciousness 1434
+ 10:        induration  6551      administered  6805      paraesthesia 1360
+ 11:     hyperhidrosis  6223      computerised  6461        thrombosis 1213
+ 12:   lymphadenopathy  6126 electrocardiogram  6316 electrocardiogram 1133
+ 13:        sars-cov-2  5754        aggravated  4400     inappropriate 1117
+ 14:      computerised  5639     inappropriate  4189        peripheral  861
+ 15:      erythematous  4978        peripheral  4175        aggravated  839
+ 16:    administration  4414     consciousness  3710       disturbance  779
+ 17: electrocardiogram  4291       interchange  3529        laboratory  574
+ 18:        aggravated  3693      palpitations  3506        ultrasound  571
+ 19:       disturbance  2921     oropharyngeal  3388       measurement  569
+ 20:     oropharyngeal  2742    administration  2883    post-injection  546
+ 21:     consciousness  2719       disturbance  2774       interchange  538
+ 22:      palpitations  2660        irritation  2546   musculoskeletal  518
+ 23:   musculoskeletal  2506        congestion  2403       haemorrhage  480
+ 24:        irritation  2221       ineffective  2379       confusional  476
+ 25:       interchange  2190   musculoskeletal  2368       vaccination  471
+ 26:       unevaluable  2004       measurement  2229     oropharyngeal  456
+ 27:      inflammation  1901       haemorrhage  2152      palpitations  434
+ 28:       confusional  1845       preparation  2140   lymphadenopathy  384
+ 29:      complication  1815        laboratory  2085       hypotension  367
+ 30:        congestion  1671        pharyngeal  2054   cerebrovascular  341
+ 31:       haemorrhage  1649        thrombosis  2034      hypertension  330
+ 32:      hypertension  1645       unevaluable  1953       respiratory  330
+ 33:        ultrasound  1632      erythematous  1890      unresponsive  325
+ 34:        thrombosis  1619    echocardiogram  1884        congestion  306
+ 35:        tenderness  1587      hypertension  1854        irritation  281
+ 36:        laboratory  1566       confusional  1839       dehydration  265
+ 37:    post-injection  1563    post-injection  1827      menstruation  263
+ 38:  hypersensitivity  1550       respiratory  1790        somnolence  256
+ 39:       measurement  1549      menstruation  1629    administration  254
+ 40:        pharyngeal  1531        ultrasound  1581    disorientation  252
+ 41:        cellulitis  1310  hypersensitivity  1504       unevaluable  251
+ 42:    echocardiogram  1267       tachycardia  1427     anticoagulant  250
+ 43:    discolouration  1251        impairment  1274        presyncope  243
+ 44:       respiratory  1164       rhinorrhoea  1271     non-responder  235
+ 45:        somnolence  1144       hypotension  1246      erythematous  232
+ 46:       tachycardia  1120        c-reactive  1207        impairment  231
+ 47:        impairment  1094      inflammation  1111    echocardiogram  229
+ 48:   cerebrovascular   999      unresponsive  1086   nasopharyngitis  212
+ 49:      menstruation   968      anaphylactic  1082      inflammation  207
+ 50:       rhinorrhoea   918  aminotransferase  1079        pharyngeal  203
+ 51:        activities   916   cerebrovascular  1075      independence  197
+ 52:      independence   915        presyncope  1031        activities  197
+ 53:   nasopharyngitis   910      independence   993        infarction  188
+ 54:        c-reactive   856        activities   993  hypersensitivity  179
+ 55:       hypotension   849        tenderness   989    discolouration  179
+ 56:      fibrillation   829        somnolence   972  aminotransferase  176
+ 57:       dehydration   823      fibrillation   918       hypersomnia  170
+ 58:  aminotransferase   782   nasopharyngitis   893        induration  154
+ 59:    disorientation   780        infarction   826        distension  154
+ 60:       hypersomnia   731       dehydration   811        c-reactive  153
+ 61:        infarction   720    disorientation   794       stimulating  152
+ 62:      anaphylactic   716     dysmenorrhoea   794        myocardial  150
+ 63:        myocardial   641        induration   792    guillain-barre  136
+ 64:      unresponsive   609       stimulating   756      fibrillation  135
+ 65:       stimulating   569       stimulation   746        dysarthria  134
+ 66:       stimulation   559       nervousness   735        dyskinesia  129
+ 67:        distension   548        myocardial   727     dysmenorrhoea  128
+ 68:     anticoagulant   547    discolouration   701        tenderness  128
+ 69:        dermatitis   531        distension   633       examination  127
+ 70:       nervousness   526       myocarditis   624       rhinorrhoea  126
+ 71:        presyncope   509     anticoagulant   586       nervousness  121
+ 72:        unilateral   469       examination   583      anaphylactic  120
+ 73:       rechallenge   452        unilateral   544       tachycardia  118
+ 74:       examination   448    intermenstrual   541    immunoglobulin  107
+ 75:     dysmenorrhoea   444        hypoacusis   537        saturation  104
+ 76:        saturation   436        dysarthria   528  gastrointestinal  103
+ 77:        dysarthria   430       hypersomnia   524       therapeutic   98
+ 78:        monitoring   424       antinuclear   519    thromboplastin   96
+ 79:       antinuclear   422        saturation   514        unilateral   94
+ 80:  gastrointestinal   421       spontaneous   510        hypoacusis   93
+ 81:   catheterisation   402        creatinine   509        unexpected   93
+ 82:        depression   376     phosphokinase   493   catheterisation   90
+ 83:        dyskinesia   374       rechallenge   493       haemoglobin   90
+ 84:      constipation   361        monitoring   477        depression   89
+ 85:        connection   361  gastrointestinal   466        creatinine   86
+ 86:        creatinine   358        dyskinesia   454       antinuclear   85
+ 87:       spontaneous   355     investigation   448        medication   85
+ 88:        hyperaemia   342       formulation   438       stimulation   85
+ 89:        angioedema   337        hyperaemia   422        monitoring   85
+ 90:       lacrimation   334        dermatitis   416       hypokinesia   82
+ 91:       hypokinesia   334        arrhythmia   409     phosphokinase   81
+ 92:        hypoacusis   329   catheterisation   405       bradycardia   78
+ 93:       haemoglobin   328      appendicitis   395      differential   78
+ 94:     phosphokinase   326       natriuretic   393      complication   75
+ 95:       fluctuation   307       haemoglobin   387      incontinence   73
+ 96:      incontinence   304        depression   381        exertional   72
+ 97:     hallucination   298       lacrimation   365      breakthrough   71
+ 98:    intermenstrual   282    immunoglobulin   365     hallucination   69
+ 99:       myocarditis   282      constipation   355    intermenstrual   69
+100:        accidental   269        cellulitis   351      constipation   69
+                 terms     N             terms     N             terms    N
