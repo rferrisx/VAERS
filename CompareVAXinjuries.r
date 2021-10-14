@@ -3,7 +3,7 @@
  # ADHOC comparision of US VAX VAERS AE from SYMPTOM* fields. This code does exactly what is written.
  # Whether this output is useful ... for comparing MODERNA, PFIZER , JANSSEN ... is unknown.
  # This output can't possibly begin to pick up all the terrible categories of Vaccine Injuries for COVID-19.
- # See  
+ # See  https://github.com/rferrisx/VAERS/blob/main/MODERNA.PFIZER.JANSSEN.txt
  # VAERS data is poorly curated and fields inconsistent or inaccurate. For example,binary fields (e.g. DIED == "Y") do not pick up all deaths among many other errors...
  # Header Code is here: https://github.com/rferrisx/VAERS/blob/main/HeaderCode.with.Analysis.r
  
