@@ -7,7 +7,7 @@ library(lubridate)
 library(stringi)
 
 # Can use Header_Revised.r code for data import. See
-# Header_code_revised_import.r :
+# Header_code_revised_import.r : https://github.com/rferrisx/VAERS/blob/main/HeaderCode_revised_import.r
 
 
 # Functions
