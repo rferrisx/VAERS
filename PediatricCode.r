@@ -188,6 +188,7 @@ final <- merge(setnames(as.data.table(AE.report,keep.rownames=TRUE),
 final[c(4:5,6:14,1:3)][c(2:8,12:14,9:11)][]
 #final[]
 }
+# END FUNCTION
 
 x <- Under12;CritMarks()
 x <- all.data[VAX_TYPE == "COVID19" & !duplicated(VAERS_ID_enhanced),];CritMarks()
