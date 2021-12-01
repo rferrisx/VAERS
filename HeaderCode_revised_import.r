@@ -4,7 +4,6 @@
 
 library(data.table)
 setDTthreads(0)
-library(lattice)
 library(lubridate)
 # Needs unzipped VAERS library from:
 # https://vaers.hhs.gov/data/datasets.html
@@ -112,4 +111,3 @@ function(x){format(object.size(get(x)),
 nsmall=3,digits=3,unit="Mb")}),keep.rownames=TRUE)[,
 c("mem","unit") := tstrsplit(V2, " ", fixed=TRUE)][,
 setnames(.SD,"V1","obj")][,.(obj,mem=as.numeric(mem),unit)][order(-mem)]
-
