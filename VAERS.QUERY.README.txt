@@ -26,7 +26,7 @@ Merged fields from DATA,VAX and SYMPTOMS unzipped VAERS 'drops' contain these fi
 2021VAERSSYMPTOMS.csv
 2021VAERSVAX.csv
 
-which I merge to one file that has the fields below. Please see header code part the R code: 
+which I merge to one file that has the fields below. Please see header code part the R code: Header_code_revised_import.r 
 
 Sample data are included with fields:
 
