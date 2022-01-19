@@ -1,4 +1,4 @@
-# Updated 1:47 PM 11/30/2021
+# Updated 2:08 PM 12/18/2021
 # Includes new db 'all.vaers.data' and 'all.data'
 # Includes memory management routines
 
@@ -18,7 +18,7 @@ fsum <- function(x) {base::sum(x,na.rm=TRUE)}
 
 ## DATA IMPORT routines
 # merge routines:
-# All 2020 data
+# All 2020 data Can pull this year explicitly:  https://vaers.hhs.gov/data/datasets.html
 setwd("D:\\Politics\\VAERS\\2020VAERSData.2020_07.19.2021")
 Data_Vax <- merge(fread("2020VAERSDATA.csv"),fread("2020VAERSVAX.csv"),all.x=TRUE,by="VAERS_ID")
 setkey(Data_Vax,VAERS_ID)
@@ -33,8 +33,8 @@ Data_Vax_SYMP_2020 <- Data_Vax_SYMP[order(VAERS_ID,-DIED,-VAX_DOSE_SERIES)]
 mergeDVS <- Data_Vax_SYMP[!duplicated(VAERS_ID),]
 mergeDVS2020 <- mergeDVS
 
-# Into November 2021 data
-setwd("D:\\Politics\\VAERS\\2021VAERSData.11.26.2021")
+# 2021 data # Can pull this year explicitly:  https://vaers.hhs.gov/data/datasets.html 
+setwd("D:\\Politics\\VAERS\\2021VAERSData.01.07.2022")
 Data_Vax <- merge(fread("2021VAERSDATA.csv"),fread("2021VAERSVAX.csv"),all.x=TRUE,by="VAERS_ID")
 setkey(Data_Vax,VAERS_ID)
 Data_Vax_SYMP <- merge(Data_Vax,fread("2021VAERSSYMPTOMS.csv"),all.x=TRUE,by="VAERS_ID")[
@@ -47,7 +47,24 @@ print("Not duplicated VAERS_ID count");Data_Vax_SYMP[!duplicated(VAERS_ID),.N]
 Data_Vax_SYMP_2021 <- Data_Vax_SYMP[order(-VAERS_ID)]
 mergeDVS <- Data_Vax_SYMP[!duplicated(VAERS_ID),]
 mergeDVS2021 <- mergeDVS
-mergeDVS <-rbind(mergeDVS2020,mergeDVS2021)[
+
+
+# 2022 data Use latest from https://vaers.hhs.gov/data/datasets.html
+setwd("D:\\Politics\\VAERS\\2022VAERSData.01.14.2022")
+Data_Vax <- merge(fread("2022VAERSDATA.csv"),fread("2022VAERSVAX.csv"),all.x=TRUE,by="VAERS_ID")
+setkey(Data_Vax,VAERS_ID)
+Data_Vax_SYMP <- merge(Data_Vax,fread("2022VAERSSYMPTOMS.csv"),all.x=TRUE,by="VAERS_ID")[
+order(VAERS_ID,-DIED,VAX_DOSE_SERIES)]
+setkey(Data_Vax_SYMP,VAERS_ID)
+print("All merged db entry count");nrow(Data_Vax_SYMP)
+print("Duplicated VAERS_ID count");Data_Vax_SYMP[duplicated(VAERS_ID),.N]
+print("Not duplicated VAERS_ID count");Data_Vax_SYMP[!duplicated(VAERS_ID),.N]
+# remove duplicated VAERS_ID...
+Data_Vax_SYMP_2022 <- Data_Vax_SYMP[order(-VAERS_ID)]
+mergeDVS <- Data_Vax_SYMP[!duplicated(VAERS_ID),]
+mergeDVS2022 <- mergeDVS
+
+mergeDVS <-rbind(mergeDVS2020,mergeDVS2021,mergeDVS2022)[
 order(VAERS_ID,-DIED,VAX_DOSE_SERIES)]
 mergeDVS[,All_symptoms:= (cbind(paste0(SYMPTOM1," ",SYMPTOM2," ",SYMPTOM3," ",SYMPTOM4," ",SYMPTOM5)))]
 
@@ -57,7 +74,7 @@ mergeDVS[,All_symptoms:= (cbind(paste0(SYMPTOM1," ",SYMPTOM2," ",SYMPTOM3," ",SY
 # all.data is de-duplicated by VAERS_ID_enhanced:= paste0(VAERS_ID,".",VAX_DOSE_SERIES)
 
 # 1:49 PM 11/30/2021 : Do not use setkey(); Working on why that changes data
-all.vaers.data <- rbind(Data_Vax_SYMP_2020,Data_Vax_SYMP_2021)
+all.vaers.data <- rbind(Data_Vax_SYMP_2020,Data_Vax_SYMP_2021,Data_Vax_SYMP_2022)
 all.vaers.data[,VAERS_ID_enhanced:= paste0(VAERS_ID,".",VAX_DOSE_SERIES)]
 all.vaers.data[,num.RECV := as.numeric(mdy(RECVDATE))]
 all.vaers.data[,VAERS_ID_enhanced_vaers:= paste0(VAERS_ID,".",VAX_DOSE_SERIES,".",num.RECV)]
@@ -68,7 +85,7 @@ all.vaers.data[VAX_MANU %in% c("MODERNA","PFIZER\\BIONTECH","JANSSEN","UNKNOWN M
  VAX_TYPE == "COVID19",][!duplicated(VAERS_ID_enhanced_vaers),.N]
 
 
-all.data <- rbind(Data_Vax_SYMP_2020,Data_Vax_SYMP_2021)
+all.data <- rbind(Data_Vax_SYMP_2020,Data_Vax_SYMP_2021,Data_Vax_SYMP_2022)
 all.data[,VAERS_ID_enhanced:= paste0(VAERS_ID,".",VAX_DOSE_SERIES)]
 all.data[,.(VAERS_ID,VAERS_ID_enhanced)]
 all.data[,All_symptoms:= (cbind(paste0(SYMPTOM1," ",SYMPTOM2," ",SYMPTOM3," ",SYMPTOM4," ",SYMPTOM5)))]
@@ -100,8 +117,10 @@ rm( list=c("Data_Vax",
 "Data_Vax_SYMP",
 "Data_Vax_SYMP_2020",
 "Data_Vax_SYMP_2021",
+"Data_Vax_SYMP_2022",
 "mergeDVS2020",
-"mergeDVS2021"))
+"mergeDVS2021",
+"mergeDVS2022"))
 gc();gc();gc();
 memory.size()
 
@@ -111,3 +130,4 @@ function(x){format(object.size(get(x)),
 nsmall=3,digits=3,unit="Mb")}),keep.rownames=TRUE)[,
 c("mem","unit") := tstrsplit(V2, " ", fixed=TRUE)][,
 setnames(.SD,"V1","obj")][,.(obj,mem=as.numeric(mem),unit)][order(-mem)]
+
