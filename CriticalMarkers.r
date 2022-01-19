@@ -6,45 +6,14 @@ setDTthreads(0)
 # Header Code
 # Needs unzipped VAERS library from:
 # https://vaers.hhs.gov/data/datasets.html
-# Below is full 2020 data and September 2021 data
+
 
 # File folder should contain like this:
 # 2020VAERSDATA.csv
 # 2020VAERSSYMPTOMS.csv
 # 2020VAERSVAX.csv 
 
-# merge routines:
-# All 2020 data
-setwd("D:\\Politics\\VAERS\\2020VAERSData.2020_07.19.2021")
-Data_Vax <- merge(fread("2020VAERSDATA.csv"),fread("2020VAERSVAX.csv"),all.x=TRUE,by="VAERS_ID")
-setkey(Data_Vax,VAERS_ID)
-Data_Vax_SYMP <- merge(Data_Vax,fread("2020VAERSSYMPTOMS.csv"),all.x=TRUE,by="VAERS_ID")
-setkey(Data_Vax_SYMP,VAERS_ID)
-print("All merged db entry count");nrow(Data_Vax_SYMP)
-print("Duplicated VAERS_ID count");Data_Vax_SYMP[duplicated(VAERS_ID),.N]
-print("Not duplicated VAERS_ID count");Data_Vax_SYMP[!duplicated(VAERS_ID),.N]
-# remove duplicated VAERS_ID...
-Data_Vax_SYMP_2020 <- Data_Vax_SYMP[order(-VAERS_ID)]
-mergeDVS <- Data_Vax_SYMP[!duplicated(VAERS_ID),]
-mergeDVS2020 <- mergeDVS
-
-# through October 8th data
-setwd("D:\\Politics\\VAERS\\2021VAERSData.10.08.2021")
-Data_Vax <- merge(fread("2021VAERSDATA.csv"),fread("2021VAERSVAX.csv"),all.x=TRUE,by="VAERS_ID")
-setkey(Data_Vax,VAERS_ID)
-Data_Vax_SYMP <- merge(Data_Vax,fread("2021VAERSSYMPTOMS.csv"),all.x=TRUE,by="VAERS_ID")
-setkey(Data_Vax_SYMP,VAERS_ID)
-print("All merged db entry count");nrow(Data_Vax_SYMP)
-print("Duplicated VAERS_ID count");Data_Vax_SYMP[duplicated(VAERS_ID),.N]
-print("Not duplicated VAERS_ID count");Data_Vax_SYMP[!duplicated(VAERS_ID),.N]
-# remove duplicated VAERS_ID...
-Data_Vax_SYMP_2021 <- Data_Vax_SYMP[order(-VAERS_ID)]
-mergeDVS <- Data_Vax_SYMP[!duplicated(VAERS_ID),]
-mergeDVS2021 <- mergeDVS
-mergeDVS <-rbind(mergeDVS2020,mergeDVS2021)
-mergeDVS[,All_symptoms:= (cbind(paste0(SYMPTOM1," ",SYMPTOM2," ",SYMPTOM3," ",SYMPTOM4," ",SYMPTOM5)))]
-fsum <- function(x) {base::sum(x,na.rm=TRUE)}
-
+# Use HeaderCode_revised_import.r first to load data
 
 # Making explicit some problems with VAERS db
 # Improper VAX_DATE
@@ -52,7 +21,6 @@ mergeDVS[
 VAX_TYPE == "COVID19" &
 NUMDAYS > (9 * 30),
 .(VAERS_ID,VAX_MANU,VAX_DATE,ONSET_DATE,ONSETminusVAX=mdy(ONSET_DATE) - mdy(VAX_DATE),NUMDAYS)]
-
 
 # Improper AGE_YRS
 mergeDVS[
@@ -79,7 +47,7 @@ AE.report <- rbind(
 	L_THREAT == "Y",
 	DISABLE == "Y",
 	HOSPITAL == "Y",
-	HOSPDAYS < 540, # less than 18 mo * 30 days: TO AVOID HOSPDAYS entries of '99999'
+	HOSPDAYS, # < 720, # less than 22 mo * 30 days: TO AVOID HOSPDAYS entries of '99999'
 	ER_ED_VISIT == "Y")],fsum)][,
   t(setnames(.SD,c(
 	"CovidAE.Reported.Total",
@@ -90,7 +58,6 @@ AE.report <- rbind(
 	"HOSPITAL.DAYS",
 	"ER_ED_VISIT")))],
 
-
 # critical demographics
 	t(x[
 	VAX_TYPE == "COVID19",lapply(.SD[
@@ -99,7 +66,7 @@ AE.report <- rbind(
 	SEX.Female=SEX == "F",
 	SEX.Male=SEX == "M",
 	SEX.UNK=SEX == "U",
-	Age.10.30=between(AGE_YRS,10,30),
+	Age.0.30=between(AGE_YRS,0,30),
 	Age.31.55=between(AGE_YRS,31,55),
 	Age.56.120=between(AGE_YRS,56,120))],fsum)])
 
@@ -115,7 +82,7 @@ AE.Died.report <- rbind(
 	L_THREAT == "Y",
 	DISABLE == "Y",
 	HOSPITAL == "Y",
-	HOSPDAYS < 540, # less than 18 mo * 30 days: TO AVOID HOSPDAYS entries of '99999'
+	HOSPDAYS, # < 720,  less than 24 mo * 30 days: TO AVOID HOSPDAYS entries of '99999'
 	ER_ED_VISIT == "Y")],fsum)][,
   t(setnames(.SD,c(
 	"CovidAE.Reported.Total",
@@ -134,7 +101,7 @@ AE.Died.report <- rbind(
 	SEX.Female=SEX == "F",
 	SEX.Male=SEX == "M",
 	SEX.UNK=SEX == "U",
-	Age.10.30=between(AGE_YRS,10,30),
+	Age.0.30=between(AGE_YRS,0,30),
 	Age.31.55=between(AGE_YRS,31,55),
 	Age.56.120=between(AGE_YRS,56,120))],fsum)])
 
@@ -184,5 +151,3 @@ x <- mergeDVS[SEX == "U",];CritMarks()
 x <- mergeDVS[VAX_MANU == "MODERNA",];CritMarks()
 x <- mergeDVS[VAX_MANU == "PFIZER\\BIONTECH",];CritMarks()
 x <- mergeDVS[VAX_MANU == "JANSSEN",];CritMarks()
-
-
