@@ -1,6 +1,7 @@
-# Updated 2:08 PM 12/18/2021
+# Updated 7:51 AM 4/21/2022
 # Includes new db 'all.vaers.data' and 'all.data'
 # Includes memory management routines
+# Includes symptom and lexical summary analysis tables
 
 library(data.table)
 setDTthreads(0)
@@ -18,7 +19,7 @@ fsum <- function(x) {base::sum(x,na.rm=TRUE)}
 
 ## DATA IMPORT routines
 # merge routines:
-# All 2020 data Can pull this year explicitly:  https://vaers.hhs.gov/data/datasets.html
+# All 2020 data. Note: You can simply download the yearly 2020 data
 setwd("D:\\Politics\\VAERS\\2020VAERSData.2020_07.19.2021")
 Data_Vax <- merge(fread("2020VAERSDATA.csv"),fread("2020VAERSVAX.csv"),all.x=TRUE,by="VAERS_ID")
 setkey(Data_Vax,VAERS_ID)
@@ -33,8 +34,8 @@ Data_Vax_SYMP_2020 <- Data_Vax_SYMP[order(VAERS_ID,-DIED,-VAX_DOSE_SERIES)]
 mergeDVS <- Data_Vax_SYMP[!duplicated(VAERS_ID),]
 mergeDVS2020 <- mergeDVS
 
-# 2021 data # Can pull this year explicitly:  https://vaers.hhs.gov/data/datasets.html 
-setwd("D:\\Politics\\VAERS\\2021VAERSData.01.07.2022")
+# 2021 data Note: You can simply download the yearly 2021 data
+setwd("D:\\Politics\\VAERS\\2021VAERSData.01.07.2022") 
 Data_Vax <- merge(fread("2021VAERSDATA.csv"),fread("2021VAERSVAX.csv"),all.x=TRUE,by="VAERS_ID")
 setkey(Data_Vax,VAERS_ID)
 Data_Vax_SYMP <- merge(Data_Vax,fread("2021VAERSSYMPTOMS.csv"),all.x=TRUE,by="VAERS_ID")[
@@ -49,8 +50,8 @@ mergeDVS <- Data_Vax_SYMP[!duplicated(VAERS_ID),]
 mergeDVS2021 <- mergeDVS
 
 
-# 2022 data Use latest from https://vaers.hhs.gov/data/datasets.html
-setwd("D:\\Politics\\VAERS\\2022VAERSData.01.14.2022")
+# 2022 data Note: You can simply download the yearly 2021 data
+setwd("D:\\Politics\\VAERS\\2022VAERSData.04.15.2022")
 Data_Vax <- merge(fread("2022VAERSDATA.csv"),fread("2022VAERSVAX.csv"),all.x=TRUE,by="VAERS_ID")
 setkey(Data_Vax,VAERS_ID)
 Data_Vax_SYMP <- merge(Data_Vax,fread("2022VAERSSYMPTOMS.csv"),all.x=TRUE,by="VAERS_ID")[
@@ -83,6 +84,9 @@ all.vaers.data[,All_symptoms:= (cbind(paste0(SYMPTOM1," ",SYMPTOM2," ",SYMPTOM3,
 all.vaers.data <- all.vaers.data[order(VAERS_ID,VAX_DOSE_SERIES,num.RECV)][!duplicated(VAERS_ID_enhanced_vaers),]
 all.vaers.data[VAX_MANU %in% c("MODERNA","PFIZER\\BIONTECH","JANSSEN","UNKNOWN MANUFACTURER") &
  VAX_TYPE == "COVID19",][!duplicated(VAERS_ID_enhanced_vaers),.N]
+all.covid.data <- all.vaers.data[VAX_MANU %in% c("MODERNA","PFIZER\\BIONTECH","JANSSEN","UNKNOWN MANUFACTURER") &
+ VAX_TYPE == "COVID19",][!duplicated(VAERS_ID_enhanced_vaers),]
+save(all.covid.data, file="all.covid.data.RDS")
 
 
 all.data <- rbind(Data_Vax_SYMP_2020,Data_Vax_SYMP_2021,Data_Vax_SYMP_2022)
@@ -130,4 +134,180 @@ function(x){format(object.size(get(x)),
 nsmall=3,digits=3,unit="Mb")}),keep.rownames=TRUE)[,
 c("mem","unit") := tstrsplit(V2, " ", fixed=TRUE)][,
 setnames(.SD,"V1","obj")][,.(obj,mem=as.numeric(mem),unit)][order(-mem)]
+
+# All Covid Analysis
+
+# START FUNCTION
+CritMarks <- function() {
+# critical markers
+AE.report <- rbind(
+ x[VAX_TYPE == "COVID19",lapply(.SD[
+	,.(
+	!is.null(VAERS_ID),
+	DIED == "Y",
+	L_THREAT == "Y",
+	DISABLE == "Y",
+	HOSPITAL == "Y",
+	HOSPDAYS, # < 720, # less than 22 mo * 30 days: TO AVOID HOSPDAYS entries of '99999'
+	ER_ED_VISIT == "Y")],fsum)][,
+  t(setnames(.SD,c(
+	"CovidAE.Reported.Total",
+	"DIED",
+	"L_THREAT",
+	"DISABLE",
+	"HOSPITAL",
+	"HOSPITAL.DAYS",
+	"ER_ED_VISIT")))],
+
+# critical demographics
+	t(x[
+	VAX_TYPE == "COVID19",lapply(.SD[
+	,.(
+	All.AE.Reports=!is.null(VAERS_ID),
+	SEX.Female=SEX == "F",
+	SEX.Male=SEX == "M",
+	SEX.UNK=SEX == "U",
+	Age.0.30=between(AGE_YRS,0,30),
+	Age.31.55=between(AGE_YRS,31,55),
+	Age.56.120=between(AGE_YRS,56,120))],fsum)])
+
+)
+
+# critical markers
+Died <- x[DIED == "Y",]
+AE.Died.report <- rbind(
+  Died[VAX_TYPE == "COVID19",lapply(.SD[
+	,.(
+	!is.null(VAERS_ID),
+	DIED == "Y",
+	L_THREAT == "Y",
+	DISABLE == "Y",
+	HOSPITAL == "Y",
+	HOSPDAYS, # < 720,  less than 24 mo * 30 days: TO AVOID HOSPDAYS entries of '99999'
+	ER_ED_VISIT == "Y")],fsum)][,
+  t(setnames(.SD,c(
+	"CovidAE.Reported.Total",
+	"DIED",
+	"L_THREAT",
+	"DISABLE",
+	"HOSPITAL",
+	"HOSPITAL.DAYS",
+	"ER_ED_VISIT")))],
+
+# critical demographics
+ t(Died[VAX_TYPE == "COVID19",lapply(.SD[
+	,.(
+	All.AE.Reports=!is.null(VAERS_ID),
+	SEX.Female=SEX == "F",
+	SEX.Male=SEX == "M",
+	SEX.UNK=SEX == "U",
+	Age.0.30=between(AGE_YRS,0,30),
+	Age.31.55=between(AGE_YRS,31,55),
+	Age.56.120=between(AGE_YRS,56,120))],fsum)])
+
+)
+
+final <- merge(setnames(as.data.table(AE.report,keep.rownames=TRUE),
+	c("Factor","All.Reported.Covid.AE")),
+       setnames(as.data.table(AE.Died.report,keep.rownames=TRUE),
+	c("Factor","All.Reported.Covid.AE.Deaths")),by="Factor")
+#final$All.Reported.Covid.AE <- final[,as.integer(All.Reported.Covid.AE)]
+#final$All.Reported.Covid.Deaths <- final[,as.integer(All.Reported.Covid.Deaths)]
+final[c(4:5,6:14,1:3)][c(2:8,12:14,9:11)][]
+}
+
+# END FUNCTION
+
+# Aggregations: 
+# Aggregated Measures by NUMDAYS
+x <- all.covid.data;CritMarks()
+x <- all.covid.data[is.na(NUMDAYS) | NUMDAYS == "" | NUMDAYS == "NA" ,];CritMarks()
+x <- all.covid.data[NUMDAYS <= 2,];CritMarks()
+x <- all.covid.data[between(NUMDAYS,0,7)];CritMarks()
+x <- all.covid.data[between(NUMDAYS,8,14)];CritMarks()
+x <- all.covid.data[between(NUMDAYS,15,21)];CritMarks()
+x <- all.covid.data[between(NUMDAYS,22,28)];CritMarks()
+x <- all.covid.data[NUMDAYS > 28,];CritMarks()
+
+# Aggregated Measures by AGE_YRS
+x <- all.covid.data[between(AGE_YRS,10,19),];CritMarks()
+x <- all.covid.data[between(AGE_YRS,20,29),];CritMarks()
+x <- all.covid.data[between(AGE_YRS,30,39),];CritMarks()
+x <- all.covid.data[between(AGE_YRS,40,49),];CritMarks()
+x <- all.covid.data[between(AGE_YRS,50,59),];CritMarks()
+x <- all.covid.data[between(AGE_YRS,60,69),];CritMarks()
+x <- all.covid.data[between(AGE_YRS,70,79),];CritMarks()
+x <- all.covid.data[between(AGE_YRS,80,89),];CritMarks()
+x <- all.covid.data[between(AGE_YRS,90,99),];CritMarks()
+x <- all.covid.data[between(AGE_YRS,100,109),];CritMarks()
+
+# Aggregated Measures by GENDER
+x <- all.covid.data[SEX == "M",];CritMarks()
+x <- all.covid.data[SEX == "F",];CritMarks()
+x <- all.covid.data[SEX == "U",];CritMarks()
+
+# Aggregated Measures by VAX_MANU
+
+x <- all.covid.data[VAX_MANU == "MODERNA",];CritMarks()
+x <- all.covid.data[VAX_MANU == "PFIZER\\BIONTECH",];CritMarks()
+x <- all.covid.data[VAX_MANU == "JANSSEN",];CritMarks()
+
+# Top Symptom* Strings
+
+# stack symptoms function. All terms lower case.
+stack.symptoms <- function(x)
+{
+m <- x[,tstrsplit(All_symptoms, " ",fill="")]
+l <- {}; m[,for(i in names(.SD)) {l <<- cbind(append(l,get(i)))}]
+l <- as.data.table(l)[!stringi::stri_isempty(V1),.(terms=as.character(V1))]
+l <- l[,setnames(as.data.table(stringi::stri_trans_tolower(terms)),"V1","terms")]
+stack.symptom.terms <<- l
+}
+
+# stack symptoms function. All terms lower case.
+stack.symptom.text <- function(x)
+{
+m <- x[,tstrsplit(SYMPTOM_TEXT, " ",fill="")]
+l <- {}; m[,for(i in names(.SD)) {l <<- cbind(append(l,get(i)))}]
+l <- as.data.table(l)[!stringi::stri_isempty(V1),.(terms=as.character(V1))]
+l <- l[,setnames(as.data.table(stringi::stri_trans_tolower(terms)),"V1","terms")]
+stack.symptom.terms <<- l
+}
+
+# run string functions
+
+stack.symptoms(all.covid.data)
+# list top 30 terms nchar < 10
+stack.symptom.terms[nchar(terms) < 10,.N,.(terms)][order(-N)][1:30]
+# list top 30 terms nchar >= 10
+stack.symptom.terms[nchar(terms) > 10,.N,.(terms)][order(-N)][1:30]
+
+stack.symptoms(all.covid.data[DIED == "Y",])
+# list top 30 terms nchar < 10
+stack.symptom.terms[nchar(terms) < 10,.N,.(terms)][order(-N)][1:30]
+# list top 30 terms nchar >= 10
+stack.symptom.terms[nchar(terms) > 10,.N,.(terms)][order(-N)][1:30]
+
+cat(' Working on this:
+stack.symptom.text(all.covid.data)
+# list top 30 terms nchar < 10
+stack.symptom.terms[nchar(terms) < 10,.N,.(terms)][order(-N)][1:30]
+# list top 30 terms nchar >= 10
+stack.symptom.terms[nchar(terms) > 10,.N,.(terms)][order(-N)][1:30]
+
+stack.symptom.text(all.covid.data[DIED == "Y",])
+# list top 30 terms nchar < 10
+stack.symptom.terms[nchar(terms) < 10,.N,.(terms)][order(-N)][1:30]
+# list top 30 terms nchar >= 10
+stack.symptom.terms[nchar(terms) > 10,.N,.(terms)][order(-N)][1:30]
+')
+
+all.covid.data[,.N,.(All_symptoms)][order(-N)][1:40]
+all.covid.data[DIED == "Y",.N,.(All_symptoms)][order(-N)][1:40]
+
+
+
+
+
+
 
